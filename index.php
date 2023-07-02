@@ -12,8 +12,8 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 $request = explode('/PHP-API-Template/', $_SERVER['REQUEST_URI'])[1];
 $request_parts = explode('/', $request);
 
-function forbidden () {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
+function forbidden ($line) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden [ line => '.$line.' ]');
     exit;
 }
 
@@ -74,35 +74,35 @@ foreach($controllers as $class_name => $controller) {
 if (count($request_parts) > 3 || 
     count($request_parts) === 1 || 
     !array_key_exists(strtolower($request_parts[0]), $controllers)) {
-    forbidden();
+    forbidden(__LINE__);
 }
 
 $request_argument = $request_parts[1];
 
 if (empty($controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']])) {
-    forbidden();
+    forbidden(__LINE__);
 }
 
 $controller = $controllers[$request_parts[0]];
 $controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
 
 if (empty($controller_endpoints[$request_parts[1]])) {
-    forbidden();
+    forbidden(__LINE__);
 }
 
 if (!empty($controller_endpoints[$request_parts[1]]['/']) && 
     (count($request_parts) < 3 || empty($request_parts[2]))) {
-    forbidden();
+    forbidden(__LINE__);
 }
 
 $class = $controllers[$request_parts[0]]['class_name'];
 $method = $request_parts[1];
 $argument = $request_parts[2];
+$post = json_decode(file_get_contents("php://input"), true);
 
 $class = new $class();
-$class->{$method}($argument);
 
-// must validate arguments
-
-// for post
-// print_r(json_decode(file_get_contents("php://input"), true));
+if (!empty($argument))
+    $class->{$method}($argument, $post);
+else
+    $class->{$method}($post);
