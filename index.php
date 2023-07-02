@@ -10,10 +10,7 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 
 $request = explode('/PHP-API-Template/', $_SERVER['REQUEST_URI'])[1];
-$endpoints = ['user', 'product'];
-
 $request_parts = explode('/', $request);
-
 
 function forbidden () {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
@@ -62,22 +59,6 @@ foreach (Scan::directory('.')->for('', true, true, false) as $file) {
                     }
                     $controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
                 }
-
-                foreach ($method->getParameters() as $param) {
-                    if (in_array('/{'.$param->getName().'}', $args)) {
-                        $param_type = $param->getType()->getName();
-                        switch($param_type) {
-                            case 'int':
-                                $classes[$class_name][$method->getName()]['regexp'] = $controllers[$class_name]['attributes'][0]['args'][0].'\/[0-9]+';
-                                break;
-                            case 'string':
-                                $classes[$class_name][$method->getName()]['regexp'] = $controllers[$class_name]['attributes'][0]['args'][0].'\/.+';
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
             }
         }
     }
@@ -90,29 +71,28 @@ foreach($controllers as $class_name => $controller) {
     unset($controllers[$class_name]);
 }
 
-if (count($request_parts) > 3 || count($request_parts) === 1 || !array_key_exists(strtolower($request_parts[0]), $controllers)) {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
-    exit;
+if (count($request_parts) > 3 || 
+    count($request_parts) === 1 || 
+    !array_key_exists(strtolower($request_parts[0]), $controllers)) {
+    forbidden();
 }
 
 $request_argument = $request_parts[1];
 
 if (empty($controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']])) {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
-    exit;
+    forbidden();
 }
 
 $controller = $controllers[$request_parts[0]];
 $controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
 
 if (empty($controller_endpoints[$request_parts[1]])) {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
-    exit;
+    forbidden();
 }
 
-if (!empty($controller_endpoints[$request_parts[1]]['/']) && (count($request_parts) < 3 || empty($request_parts[2]))) {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
-    exit;
+if (!empty($controller_endpoints[$request_parts[1]]['/']) && 
+    (count($request_parts) < 3 || empty($request_parts[2]))) {
+    forbidden();
 }
 
 echo "<pre>
