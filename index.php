@@ -95,13 +95,14 @@ if (!empty($controller_endpoints[$request_parts[1]]['/']) &&
     forbidden();
 }
 
-echo "<pre>
-";
-echo $request.'
+$class = $controllers[$request_parts[0]]['class_name'];
+$method = $request_parts[1];
+$argument = $request_parts[2];
 
-';
-print_r($controller);
-echo "
-</pre>";
+$class = new $class();
+$class->{$method}($argument);
+
+// must validate arguments
+
 // for post
 // print_r(json_decode(file_get_contents("php://input"), true));
