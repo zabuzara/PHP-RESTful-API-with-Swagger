@@ -102,14 +102,15 @@ if (empty($controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']]
     exit;
 }
 
-$controller_endpoints = $controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']];
+$controller = $controllers[$request_parts[0]];
+$controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
 
 if (empty($controller_endpoints[$request_parts[1]])) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
     exit;
 }
 
-if (!empty($controller_endpoints[$request_parts[1]]['/']) && empty($request_parts[2])) {
+if (!empty($controller_endpoints[$request_parts[1]]['/']) && (count($request_parts) < 3 || empty($request_parts[2]))) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
     exit;
 }
@@ -119,7 +120,7 @@ echo "<pre>
 echo $request.'
 
 ';
-print_r($controllers);
+print_r($controller);
 echo "
 </pre>";
 // for post
