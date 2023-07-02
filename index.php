@@ -14,6 +14,7 @@ $request_parts = explode('/', $request);
 
 function forbidden ($line) {
     header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden [ line => '.$line.' ]');
+    echo json_encode(['error' => ['code' => 403, 'message' => 'access denied']]);
     exit;
 }
 
