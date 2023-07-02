@@ -43,7 +43,6 @@ foreach (Scan::directory('.')->for('', true, true, false) as $file) {
         }
 
         if (array_key_exists($class_name, $controllers)) {
-
             $controllers[$class_name]['mapping'] = [];
             foreach ($reflection->getMethods() as $method) {
                 $classes[$class_name][$method->getName()] = [];
@@ -72,27 +71,21 @@ foreach($controllers as $class_name => $controller) {
 
 if (count($request_parts) > 3 || 
     count($request_parts) === 1 || 
-    !array_key_exists(strtolower($request_parts[0]), $controllers)) {
+    !array_key_exists(strtolower($request_parts[0]), $controllers))
     forbidden(__LINE__);
-}
 
-$request_argument = $request_parts[1];
-
-if (empty($controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']])) {
+if (empty($controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']]))
     forbidden(__LINE__);
-}
 
 $controller = $controllers[$request_parts[0]];
 $controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
 
-if (empty($controller_endpoints[$request_parts[1]])) {
+if (empty($controller_endpoints[$request_parts[1]]))
     forbidden(__LINE__);
-}
 
 if (!empty($controller_endpoints[$request_parts[1]]['/']) && 
-    (count($request_parts) < 3 || empty($request_parts[2]))) {
+    (count($request_parts) < 3 || empty($request_parts[2])))
     forbidden(__LINE__);
-}
 
 $class = $controllers[$request_parts[0]]['class_name'];
 $method = $request_parts[1];
