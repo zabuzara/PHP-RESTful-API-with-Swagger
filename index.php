@@ -2,10 +2,25 @@
 include_once 'Scan.php';
 include_once 'Attributes.php';
 
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+
 $request = explode('/PHP-API-Template/', $_SERVER['REQUEST_URI'])[1];
 $endpoints = ['user', 'product'];
 
+$request_parts = explode('/', $request);
 
+
+function forbidden () {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
+    exit;
+}
+
+$controller_names = [];
 $controllers = [];
 $classes = [];
 foreach (Scan::directory('.')->for('', true, true, false) as $file) {
@@ -14,54 +29,43 @@ foreach (Scan::directory('.')->for('', true, true, false) as $file) {
     if (class_exists(explode('.php', $file['name'])[0])) {
         $class_name = explode('.php', $file['name'])[0];
         $reflection = new ReflectionClass($class_name);
+   
+
         foreach ($reflection->getAttributes() as $attribute) {
             if ($attribute->getName() === Controller::class) {
-                $controllers[$class_name]['attributes'] = [];
+                $controllers[$class_name]['request'] = '';
                 $controllers[$class_name]['class_path'] = $file['path'];
                 $classes[$class_name] = [];
-            }
-
-            if (!array_key_exists('attributes', $controllers[$class_name]))
-                break;
+            } 
 
             if ($attribute->getName() !== Controller::class) {
-                array_push(
-                    $controllers[$class_name]['attributes'], 
-                    [
-                        'name' => $attribute->getName(), 
-                        'args' => $attribute->getArguments() 
-                    ]
-                );
+                if (!array_key_exists('request', $controllers[$class_name]))
+                    break;
+
+                $controllers[$class_name]['request'] = $attribute->getArguments()[0];
             }
         }
 
         if (array_key_exists($class_name, $controllers)) {
+
             $controllers[$class_name]['mapping'] = [];
             foreach ($reflection->getMethods() as $method) {
                 $classes[$class_name][$method->getName()] = [];
 
                 $args = [];
                 foreach ($method->getAttributes() as $attribute) {
-                    if (!key_exists($attribute->getName(), $controllers[$class_name]['mapping']))
-                        $controllers[$class_name]['mapping'][$attribute->getName()] = [];
+                    if (!key_exists($attribute->getName(), $controllers[$class_name]['mapping'])) {
+                        $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
                         
-                    array_push(
-                        $controllers[$class_name]['mapping'][$attribute->getName()], 
-                        [
-                            'name' => $method->getName(),
-                            'args' => $attribute->getArguments()
-                        ]
-                    );
-
-                    if (count($attribute->getArguments()) > 0) {
-                        array_push($args, $attribute->getArguments()[0]);
+                        if (!key_exists($method_name, $controllers[$class_name]['mapping']))
+                            $controllers[$class_name]['mapping'][$method_name] = [];
                     }
+                    $controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
                 }
 
                 foreach ($method->getParameters() as $param) {
                     if (in_array('/{'.$param->getName().'}', $args)) {
                         $param_type = $param->getType()->getName();
-
                         switch($param_type) {
                             case 'int':
                                 $classes[$class_name][$method->getName()]['regexp'] = $controllers[$class_name]['attributes'][0]['args'][0].'\/[0-9]+';
@@ -79,30 +83,44 @@ foreach (Scan::directory('.')->for('', true, true, false) as $file) {
     }
 }
 
-echo '<pre>';
-echo $request;
-echo "<br>";
-echo "<br>";
-print_r($classes);
-echo '</pre>';
-
-foreach($classes as $class_name => $class) {
-    foreach($class as $method_name => $method) {
-        echo $method[0];
-        if (preg_match('/'.$method['reqexp'].'/', $request)) {
-            header($_SERVER['SERVER_PROTOCOL'] . ' 200');
-
-            break;
-            // $param = explode('/', $request)[1];
-            // include_once $controllers[$class_name]['class_path'];
-            // $controller = new $class_name();
-            // $controller->{$method_name}($param);
-            // break 2;
-            // goto controller_called;
-        } else {
-            header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
-            exit;
-        }
-    }
+foreach($controllers as $class_name => $controller) {
+    $controllers[$controller['request']] = $controller;
+    $controllers[$controller['request']]['class_name'] = $class_name;
+    unset($controllers[$controller['request']]['request']);
+    unset($controllers[$class_name]);
 }
-// controller_called:
+
+if (count($request_parts) > 3 || count($request_parts) === 1 || !array_key_exists(strtolower($request_parts[0]), $controllers)) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
+    exit;
+}
+
+$request_argument = $request_parts[1];
+
+if (empty($controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']])) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
+    exit;
+}
+
+$controller_endpoints = $controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']];
+
+if (empty($controller_endpoints[$request_parts[1]])) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
+    exit;
+}
+
+if (!empty($controller_endpoints[$request_parts[1]]['/']) && empty($request_parts[2])) {
+    header($_SERVER['SERVER_PROTOCOL'] . ' 403 forbidden');
+    exit;
+}
+
+echo "<pre>
+";
+echo $request.'
+
+';
+print_r($controllers);
+echo "
+</pre>";
+// for post
+// print_r(json_decode(file_get_contents("php://input"), true));
