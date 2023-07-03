@@ -2,23 +2,14 @@
 include_once 'Scan.php';
 include_once 'Attributes.php';
 
+/**
+ * @author Omid Malekzadeh Eshtajarani <zabuzara@yahoo.com>
+ * Simple RESTful class for control the 
+ * METHODS: GET, POST, PUT, DELETE, OPTIONS
+ * and handle with Controller classes and call automatically
+ * the endpoint functions in Controller classes
+ */
 final class RESTful {
-    /*
-    .htaccess rules
-    ---------------
-    RewriteEngine On
-    RewriteBase /PHP-API-Template/
-    RewriteRule ^index\.php$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    ErrorDocument 404 /PHP-API-Template/index.php
-    Options -Indexes
-    IndexIgnore *
-    RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)
-    RewriteRule .* index.php
-    ErrorDocument 403 "access denied"
-     */
-
     private $controllers = [];
     private $classes = [];
 
@@ -136,12 +127,23 @@ final class RESTful {
             $class->{$method}($post);
     }
 
+    /**
+     * Returns error message if endpoint not exists
+     *
+     * @param [type] $line
+     * @return void
+     */
     private function forbidden ($line) {
         header($_SERVER['SERVER_PROTOCOL'] . ' 404 not found');
         echo json_encode(['error' => ['code' => 404, 'message' => 'access denied']]);
         exit;
     }
 
+    /**
+     * Prints Controller classes
+     *
+     * @return void
+     */
     public function show_controllers_structure () {
         print_r($this->controllers);
     }
