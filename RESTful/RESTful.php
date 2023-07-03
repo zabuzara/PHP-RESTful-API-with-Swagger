@@ -142,7 +142,7 @@ final class RESTful {
         exit;
     }
 
-    public function show_controllers_structur () {
+    public function show_controllers_structure () {
         print_r($this->controllers);
     }
 }

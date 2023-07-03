@@ -2,7 +2,6 @@
 #[Controller]
 #[RequestMapping('user')]
 class UserController {
-
     private $repository;
 
     public function __construct() {

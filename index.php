@@ -2,5 +2,6 @@
 include_once './entity-framework/index.php';
 include_once './RESTful/RESTful.php';
 
-
-new RESTful();
+echo "<pre>";
+/*(*/new RESTful();//)->show_controllers_structure();
+echo "</pre>";
