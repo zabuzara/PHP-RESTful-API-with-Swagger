@@ -137,7 +137,7 @@ final class RESTful {
      */
     private function forbidden ($line) {
         header($_SERVER['SERVER_PROTOCOL'] . ' 404 not found');
-        echo json_encode(['error' => ['code' => 404, 'message' => 'access denied']]);
+        echo json_encode(['error' => ['code' => 404, 'message' => 'not found']]);
         exit;
     }
 

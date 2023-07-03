@@ -13,11 +13,11 @@ class UserRepository extends BaseRepository {
         return $this->find($entity_name, $surname, __FUNCTION__);
     }
 
-    private function find (string $entity_name, string $subject, $func) : array {
+    private function find (string $entity_name, string $subject, $func_name) : array {
         if ($this->table_exists($entity_name)) {
             $table_name = $this->get_table_name($entity_name);
             $primary_key_name = $this->get_primary_key($table_name);
-            $column_name = explode('find_by_', $func)[1];
+            $column_name = explode('find_by_', $func_name)[1];
 
             if (!empty($primary_key_name)) {
                 return $this->get_context()->exec("SELECT * FROM `".$table_name."` WHERE `".$column_name."` LIKE ?", ["%".$subject."%"]);
