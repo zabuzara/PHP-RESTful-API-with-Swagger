@@ -2,7 +2,7 @@
     "context": [
         {
             "db_driver": "mysql",
-            "db_name": "RESTful",
+            "db_name": "TEST_EM_V01",
             "db_user": "root",
             "db_pass": "omid40022",
             "db_host": "127.0.0.1",
