@@ -51,42 +51,46 @@ final class RESTful {
         $request_parts =  explode('/', explode('/PHP-API-Template/', $_SERVER['REQUEST_URI'])[1]);
         
         foreach (Scan::directory('.')->for('', true, true, false) as $file) {
-            include_once $file['path'];
-        
-            if (class_exists(explode('.php', $file['name'])[0])) { 
-        
-                $class_name = explode('.php', $file['name'])[0];
-                $reflection = new ReflectionClass($class_name);
-         
-                foreach ($reflection->getAttributes() as $attribute) {
-                    if ($attribute->getName() === Controller::class) {
-                        $this->controllers[$class_name]['request'] = '';
-                        $this->controllers[$class_name]['class_path'] = $file['path'];
-                        $this->classes[$class_name] = [];
-                    } 
-        
-                    if ($attribute->getName() !== Controller::class) {
-                        if (!array_key_exists('request', $this->controllers[$class_name]))
-                            break;
-        
-                        $this->controllers[$class_name]['request'] = $attribute->getArguments()[0];
-                    }
-                }
-        
-                if (array_key_exists($class_name, $this->controllers)) {
-                    $this->controllers[$class_name]['mapping'] = [];
-                    foreach ($reflection->getMethods() as $method) {
-                        $this->classes[$class_name][$method->getName()] = [];
-        
-                        $args = [];
-                        foreach ($method->getAttributes() as $attribute) {
-                            if (!key_exists($attribute->getName(), $this->controllers[$class_name]['mapping'])) {
-                                $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
-                                
-                                if (!key_exists($method_name, $this->controllers[$class_name]['mapping']))
-                                    $this->controllers[$class_name]['mapping'][$method_name] = [];
+            if ($file['name'] !== 'RESTful.php') {
+                if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
+                    include_once $file['path'];
+          
+                    if (class_exists(explode('.php', $file['name'])[0])) { 
+                
+                        $class_name = explode('.php', $file['name'])[0];
+                        $reflection = new ReflectionClass($class_name);
+                
+                        foreach ($reflection->getAttributes() as $attribute) {
+                            if ($attribute->getName() === Controller::class) {
+                                $this->controllers[$class_name]['request'] = '';
+                                $this->controllers[$class_name]['class_path'] = $file['path'];
+                                $this->classes[$class_name] = [];
+                            } 
+                
+                            if ($attribute->getName() !== Controller::class) {
+                                if (!array_key_exists('request', $this->controllers[$class_name]))
+                                    break;
+                
+                                $this->controllers[$class_name]['request'] = $attribute->getArguments()[0];
                             }
-                            $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
+                        }
+                
+                        if (array_key_exists($class_name, $this->controllers)) {
+                            $this->controllers[$class_name]['mapping'] = [];
+                            foreach ($reflection->getMethods() as $method) {
+                                $this->classes[$class_name][$method->getName()] = [];
+                
+                                $args = [];
+                                foreach ($method->getAttributes() as $attribute) {
+                                    if (!key_exists($attribute->getName(), $this->controllers[$class_name]['mapping'])) {
+                                        $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
+                                        
+                                        if (!key_exists($method_name, $this->controllers[$class_name]['mapping']))
+                                            $this->controllers[$class_name]['mapping'][$method_name] = [];
+                                    }
+                                    $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
+                                }
+                            }
                         }
                     }
                 }
