@@ -1,6 +1,4 @@
 <?php
-include_once './../repositories/UserRepository.php';
-
 #[Controller]
 #[RequestMapping('user')]
 class UserController {
@@ -10,7 +8,6 @@ class UserController {
     public function __construct() {
         $this->repository = new UserRepository();
     }
-
 
     #[GetMapping('/get_all')]
     public function get_all() {
@@ -24,9 +21,22 @@ class UserController {
         echo json_encode($this->repository->find_by_id(UserEntity::class, $id));
     }
 
-    #[GetMapping('/get_by_name/{name}')]
-    public function get_by_name(string $name) {
-        echo 'Method: GET => '.__CLASS__.'->'.__FUNCTION__."(name)";
+    #[GetMapping('/get_by_forename/{forename}')]
+    public function get_by_forename(string $forename) {
+        echo 'Method: GET => '.__CLASS__.'->'.__FUNCTION__."(forename)";
+        echo json_encode($this->repository->find_by_forename(UserEntity::class, $forename));
+    }
+
+    #[GetMapping('/get_by_surname/{surname}')]
+    public function get_by_surname(string $surname) {
+        echo 'Method: GET => '.__CLASS__.'->'.__FUNCTION__."(surname)";
+        echo json_encode($this->repository->find_by_surname(UserEntity::class, $surname));
+    }
+
+    #[GetMapping('/get_by_email/{email}')]
+    public function get_by_email(string $email) {
+        echo 'Method: GET => '.__CLASS__.'->'.__FUNCTION__."(email)";
+        echo json_encode($this->repository->find_by_email(UserEntity::class, $email));
     }
 
     #[PostMapping('/save_user')]

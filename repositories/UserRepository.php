@@ -1,5 +1,42 @@
 <?php
 #[REPOSITORY]
 class UserRepository extends BaseRepository {
+    public function find_by_email(string $entity_name, string $email) : array {
+        if ($this->table_exists($entity_name)) {
+            $table_name = $this->get_table_name($entity_name);
+            $primary_key_name = $this->get_primary_key($table_name);
+            $column_name = explode('find_by_', __FUNCTION__)[1];
 
+            if (!empty($primary_key_name)) {
+                return $this->get_context()->exec("SELECT * FROM `".$table_name."` WHERE `".$column_name."` LIKE ?", ["%".$email."%"]);
+            }
+        }
+        return [];
+    }
+
+    public function find_by_forename(string $entity_name, string $forename) : array {
+        if ($this->table_exists($entity_name)) {
+            $table_name = $this->get_table_name($entity_name);
+            $primary_key_name = $this->get_primary_key($table_name);
+            $column_name = explode('find_by_', __FUNCTION__)[1];
+
+            if (!empty($primary_key_name)) {
+                return $this->get_context()->exec("SELECT * FROM `".$table_name."` WHERE `".$column_name."` LIKE ?", ["%".$forename."%"]);
+            }
+        }
+        return [];
+    }
+
+    public function find_by_surname(string $entity_name, string $surname) : array {
+        if ($this->table_exists($entity_name)) {
+            $table_name = $this->get_table_name($entity_name);
+            $primary_key_name = $this->get_primary_key($table_name);
+            $column_name = explode('find_by_', __FUNCTION__)[1];
+
+            if (!empty($primary_key_name)) {
+                return $this->get_context()->exec("SELECT * FROM `".$table_name."` WHERE `".$column_name."` LIKE ?", ["%".$surname."%"]);
+            }
+        }
+        return [];
+    }
 }
