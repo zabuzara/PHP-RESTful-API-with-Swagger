@@ -1,11 +1,3 @@
 RewriteEngine On
-RewriteBase /PHP-API-Template/
-RewriteRule ^index\.php$ - [L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-ErrorDocument 404 /PHP-API-Template/index.php
-Options -Indexes
-IndexIgnore *
 RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)
 RewriteRule .* index.php
-ErrorDocument 403 "access denied"
