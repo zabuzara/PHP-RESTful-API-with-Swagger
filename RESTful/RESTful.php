@@ -10,12 +10,23 @@ include_once 'Attributes.php';
  * the endpoint functions in Controller classes
  */
 final class RESTful {
+    static public $session_key_for_token = null;
+    static public $session_key_for_expiration = null;
     private $controllers = [];
     private $classes = [];
     private $endpoint = '';
-    private $parameters = [];
+    private mixed $parameters = [];
 
-    public function __construct(string $document_root) {
+
+    static public function with_authorization(
+        string $session_key_for_token, 
+        string $session_key_for_expiration
+    ) {
+        self::$session_key_for_token = $session_key_for_token;
+        self::$session_key_for_expiration =  $session_key_for_expiration;
+    }
+
+    public function __construct(string $document_root, array $ignore_routes = []) {
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
             $htaccess_file = $search_result[0];
@@ -23,6 +34,8 @@ final class RESTful {
                 'RewriteEngine On',
                 'RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)',
                 'RewriteRule .* index.php',
+                'RewriteCond %{HTTP:Authorization} .',
+                'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]'
             ];
 
             if (!empty(file_get_contents($htaccess_file['path']))) {
@@ -42,128 +55,134 @@ final class RESTful {
         header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
         $request_parts =  explode('/', explode($document_root, $_SERVER['REQUEST_URI'])[1]);
         
-       
-        if (count($request_parts) > 0) {
-            if (count(explode('?', $request_parts[1])) > 1) {
-                $this->endpoint = explode('?', $request_parts[1])[0];
-                $get_parameters = explode('?', $request_parts[1])[1];
-                $get_parameters = explode('&', $get_parameters);
-            
-                foreach ($get_parameters as $param) {
-                    $name = explode('=', $param)[0];
-                    $value = explode('=', $param)[1];
-                    $this->parameters[$name] = $value;
+    
+        if (($this->is_with_authorization() && $this->is_valid_token() && !in_array($request_parts[0], $ignore_routes)) ||
+            (!$this->is_with_authorization()) ||
+            (in_array($request_parts[0], $ignore_routes))) {
+
+            if (count($request_parts) > 0) {
+                if (count(explode('?', $request_parts[1])) > 1) {
+                    $this->endpoint = explode('?', $request_parts[1])[0];
+                    $get_parameters = explode('?', $request_parts[1])[1];
+                    $get_parameters = explode('&', $get_parameters);
+                
+                    foreach ($get_parameters as $param) {
+                        $name = explode('=', $param)[0];
+                        $value = explode('=', $param)[1];
+                        $this->parameters[$name] = $value;
+                    }
+
+                    if (count($this->parameters) === 1)
+                        $this->parameters = array_values($this->parameters)[0];
+                } else {
+                    $this->endpoint = $request_parts[1];
                 }
-
-                if (count($this->parameters) === 1)
-                    $this->parameters = array_values($this->parameters)[0];
-            } else {
-                $this->endpoint = $request_parts[1];
             }
-        }
 
-
-        foreach (Scan::directory('.')->for('', true, true, false) as $file) {
-            if ($file['name'] !== 'RESTful.php') {
-                if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
-                    include_once $file['path'];
-          
-                    if (class_exists(explode('.php', $file['name'])[0])) { 
-                
-                        $class_name = explode('.php', $file['name'])[0];
-                        $reflection = new ReflectionClass($class_name);
-                
-                        foreach ($reflection->getAttributes() as $attribute) {
-                            if ($attribute->getName() === Controller::class) {
-                                $this->controllers[$class_name]['request'] = '';
-                                $this->controllers[$class_name]['class_path'] = $file['path'];
-                                $this->classes[$class_name] = [];
-                            } 
-                
-                            if ($attribute->getName() !== Controller::class) {
-                                if (!array_key_exists('request', $this->controllers[$class_name]))
-                                    break;
-                
-                                $this->controllers[$class_name]['request'] = $attribute->getArguments()[0];
+            foreach (Scan::directory('.')->for('', true, true, false) as $file) {
+                if ($file['name'] !== 'RESTful.php' && str_contains($file['name'], '.php')) {
+                    if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
+                        include_once $file['path'];
+            
+                        if (class_exists(explode('.php', $file['name'])[0])) { 
+                    
+                            $class_name = explode('.php', $file['name'])[0];
+                            $reflection = new ReflectionClass($class_name);
+                    
+                            foreach ($reflection->getAttributes() as $attribute) {
+                                if ($attribute->getName() === Controller::class) {
+                                    $this->controllers[$class_name]['request'] = '';
+                                    $this->controllers[$class_name]['class_path'] = $file['path'];
+                                    $this->classes[$class_name] = [];
+                                } 
+                    
+                                if ($attribute->getName() !== Controller::class) {
+                                    if (!array_key_exists('request', $this->controllers[$class_name]))
+                                        break;
+                    
+                                    $this->controllers[$class_name]['request'] = $attribute->getArguments()[0];
+                                }
                             }
-                        }
-                
-                        if (array_key_exists($class_name, $this->controllers)) {
-                            $this->controllers[$class_name]['mapping'] = [];
-                            foreach ($reflection->getMethods() as $method) {
-                                $this->classes[$class_name][$method->getName()] = [];
-                
-                                $args = [];
-                                foreach ($method->getAttributes() as $attribute) {
-                                    if (!key_exists($attribute->getName(), $this->controllers[$class_name]['mapping'])) {
-                                        $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
-                                        
-                                        if (!key_exists($method_name, $this->controllers[$class_name]['mapping']))
-                                            $this->controllers[$class_name]['mapping'][$method_name] = [];
-                                    }
-                                    if ($method->getName() === $this->endpoint) {
-                                        foreach ($method->getParameters() as $param) {
-                                            foreach($param->getAttributes() as $param_attr) {
-                                                if ($param_attr->getName() === PathVariable::class) {
-                                                    foreach($param_attr->getArguments() as $arg_name => $arg_val) {
-                                                        if ($arg_name === 'require' && $arg_val && empty($request_parts[2]))
-                                                            RESTful::response('Not given Path varibale');
+                    
+                            if (array_key_exists($class_name, $this->controllers)) {
+                                $this->controllers[$class_name]['mapping'] = [];
+                                foreach ($reflection->getMethods() as $method) {
+                                    $this->classes[$class_name][$method->getName()] = [];
+                    
+                                    $args = [];
+                                    foreach ($method->getAttributes() as $attribute) {
+                                        if (!key_exists($attribute->getName(), $this->controllers[$class_name]['mapping'])) {
+                                            $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
+                                            
+                                            if (!key_exists($method_name, $this->controllers[$class_name]['mapping']))
+                                                $this->controllers[$class_name]['mapping'][$method_name] = [];
+                                        }
+                                        if ($method->getName() === $this->endpoint) {
+                                            foreach ($method->getParameters() as $param) {
+                                                foreach($param->getAttributes() as $param_attr) {
+                                                    if ($param_attr->getName() === PathVariable::class) {
+                                                        foreach($param_attr->getArguments() as $arg_name => $arg_val) {
+                                                            if ($arg_name === 'require' && $arg_val && empty($request_parts[2]))
+                                                                RESTful::response('Not given Path varibale');
 
-                                                        if (!empty($request_parts[2])) {
-                                                            if ($arg_name === 'validate') {
-                                                                if (!$this->validate_param_type($arg_val, $request_parts[2]))
-                                                                    RESTful::response('Invalid data type');
+                                                            if (!empty($request_parts[2])) {
+                                                                if ($arg_name === 'validate') {
+                                                                    if (!$this->validate_param_type($arg_val, $request_parts[2]))
+                                                                        RESTful::response('Invalid data type');
+                                                                }
+                                                                if ($arg_name === 'name' && $arg_val !== $param->getName())
+                                                                    RESTful::response('Invalid parameter name in function controller');
                                                             }
-                                                            if ($arg_name === 'name' && $arg_val !== $param->getName())
-                                                                RESTful::response('Invalid parameter name in function controller');
+                                                            $this->parameters = $request_parts[2];
                                                         }
-                                                        $this->parameters = $request_parts[2];
                                                     }
                                                 }
                                             }
                                         }
+                                        $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
                                     }
-                                    $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
-        foreach($this->controllers as $class_name => $controller) {
-            $this->controllers[$controller['request']] = $controller;
-            $this->controllers[$controller['request']]['class_name'] = $class_name;
-            unset($this->controllers[$controller['request']]['request']);
-            unset($this->controllers[$class_name]);
-        }
-        
-        if (count($request_parts) > 3 || 
-            count($request_parts) === 1 || 
-            !array_key_exists(strtolower($request_parts[0]), $this->controllers))
+            foreach($this->controllers as $class_name => $controller) {
+                $this->controllers[$controller['request']] = $controller;
+                $this->controllers[$controller['request']]['class_name'] = $class_name;
+                unset($this->controllers[$controller['request']]['request']);
+                unset($this->controllers[$class_name]);
+            }
+            
+            if (count($request_parts) > 3 || 
+                count($request_parts) === 1 || 
+                !array_key_exists(strtolower($request_parts[0]), $this->controllers))
+                $this->forbidden(__LINE__);
+            
+            if (empty($this->controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']]))
+                $this->forbidden(__LINE__);
+
+
+            $controller = $this->controllers[$request_parts[0]];
+            $controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
+
+            
+            if (empty($controller_endpoints[$this->endpoint]))
             $this->forbidden(__LINE__);
-        
-        if (empty($this->controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']]))
-            $this->forbidden(__LINE__);
-
-
-        $controller = $this->controllers[$request_parts[0]];
-        $controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
-
-        
-        if (empty($controller_endpoints[$this->endpoint]))
-        $this->forbidden(__LINE__);
-        
-        $class = $this->controllers[$request_parts[0]]['class_name'];
-        $method = $this->endpoint;
-        $post = json_decode(file_get_contents("php://input"), true);
-        
-        $class = new $class();
-        if (!empty($this->parameters))
-            $class->{$method}($this->parameters, $post);
-        else
-            $class->{$method}($post);
+            
+            $class = $this->controllers[$request_parts[0]]['class_name'];
+            $method = $this->endpoint;
+            $post = json_decode(file_get_contents("php://input"), true);
+            
+            $class = new $class();
+            if (!empty($this->parameters))
+                $class->{$method}($this->parameters, $post);
+            else
+                $class->{$method}($post);
+        } else {
+            RESTful::response('Access denied', 403);
+        }
     }
 
     /**
@@ -228,5 +247,48 @@ final class RESTful {
             case Validate::STRING: return preg_match('/^[0-9a-zA-Z]+$/', $value);
             default: return false;
         }
+    }
+
+    /**
+     * Returns token object with parsed value of given token string
+     *
+     * @param string $token_string
+     * @return string|null
+     */
+    private function get_beaer_token () : string|null {
+        $headers = apache_request_headers();
+        if (!empty($headers) && array_key_exists('Authorization', $headers)) {
+            $token_value = str_contains($headers['Authorization'], 'Bearer ') ? explode('Bearer ', $headers['Authorization'])[1] : $headers['Authorization'];
+            return $token_value;
+        } 
+        return null;
+    }
+
+    /**
+     * Checks if RESTful startet 
+     * with authorization
+     *
+     * @return boolean
+     */
+    private function is_with_authorization () : bool {
+        return  !is_null(self::$session_key_for_token) &&
+                !is_null(self::$session_key_for_expiration);
+    }
+
+    /**
+     * Checks token validation
+     *
+     * @return boolean
+     */
+    private function is_valid_token () : bool {
+        $token = $this->get_beaer_token();
+        if (session_status() !== PHP_SESSION_ACTIVE)
+            session_start();
+        $session_token = $_SESSION[self::$session_key_for_token];
+        if (new DateTime() > new DateTime($_SESSION[self::$session_key_for_expiration])) {
+            $session_token = '';
+            session_destroy();
+        }
+        return ($this->is_with_authorization() && $token === $session_token);
     }
 }
