@@ -24,3 +24,13 @@ class DeleteMapping {}
 
 #[Attribute(Attribute::TARGET_PARAMETER)]
 class RequestParam {}
+
+#[Attribute(Attribute::TARGET_PARAMETER)]
+class PathVariable {}
+
+#[Attribute]
+enum Validate {
+    case INT;
+    case FLOAT;
+    case STRING;
+}
