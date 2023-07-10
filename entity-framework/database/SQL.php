@@ -109,13 +109,18 @@ final class SQL {
 
             if (!empty($sql)) {
                 $rows = [];
-                $statement = SQL::$connection->prepare($sql);
-                $statement->execute($params);
-                $content = $statement->fetchAll(\PDO::FETCH_ASSOC);
-                if (!empty($content) && count($content) > 0) {
-                    foreach($content as $row) {
-                        array_push($rows, $row);
+                try {
+                    $statement = SQL::$connection->prepare($sql);
+                    $statement->execute($params);
+                    $content = $statement->fetchAll(\PDO::FETCH_ASSOC);
+                    if (!empty($content) && count($content) > 0) {
+                        foreach($content as $row) {
+                            array_push($rows, $row);
+                        }
+                        return $rows;
                     }
+                } catch (Exception $e) {
+                    echo $e;
                     return $rows;
                 }
             }
@@ -135,5 +140,24 @@ final class SQL {
     static function debug() {
         echo '<h1 style="padding:5px;font-family:monospace;color:#333;">PHP Entity-Framework</h1>';
         SQL::$DEBUG = true;
+    }
+
+    /**
+     * Retunrs a valid datetime string 
+     * for sql from given DateTime instance
+     *
+     * @param DateTime $datetime
+     * @return string
+     */
+    static public function get_valid_sql_datetime_string (DateTime $datetime) : string {
+        $date = getdate($datetime->getTimestamp());
+        $year = $date['year'];
+        $month = strlen($date['mon']) === 1 ? '0'.$date['mon'] : $date['mon'];
+        $day = strlen($date['mday']) === 1 ? '0'.$date['mday'] : $date['mday'];
+        $hour = strlen($date['hours']) === 1 ? '0'.$date['hours'] : $date['hours'];
+        $minute = strlen($date['minutes']) === 1 ? '0'.$date['minutes'] : $date['minutes'];
+        $second = strlen($date['seconds']) === 1 ? '0'.$date['seconds'] : $date['seconds'];
+        $datetime = $year.'-'.$month.'-'.$day.' '.$hour.':'.$minute.':'.$second;
+        return ($datetime);
     }
 }
