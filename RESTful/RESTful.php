@@ -12,8 +12,10 @@ include_once 'Attributes.php';
 final class RESTful {
     private $controllers = [];
     private $classes = [];
+    private $endpoint = '';
+    private $parameters = [];
 
-    public function __construct() {
+    public function __construct(string $document_root) {
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
             $htaccess_file = $search_result[0];
@@ -38,8 +40,29 @@ final class RESTful {
         header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
         header("Access-Control-Max-Age: 3600");
         header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-        $request_parts =  explode('/', explode('/PHP-API-Template/', $_SERVER['REQUEST_URI'])[1]);
+        $request_parts =  explode('/', explode($document_root, $_SERVER['REQUEST_URI'])[1]);
         
+       
+        if (count($request_parts) > 0) {
+            if (count(explode('?', $request_parts[1])) > 1) {
+                $this->endpoint = explode('?', $request_parts[1])[0];
+                $get_parameters = explode('?', $request_parts[1])[1];
+                $get_parameters = explode('&', $get_parameters);
+            
+                foreach ($get_parameters as $param) {
+                    $name = explode('=', $param)[0];
+                    $value = explode('=', $param)[1];
+                    $this->parameters[$name] = $value;
+                }
+
+                if (count($this->parameters) === 1)
+                    $this->parameters = array_values($this->parameters)[0];
+            } else {
+                $this->endpoint = $request_parts[1];
+            }
+        }
+
+
         foreach (Scan::directory('.')->for('', true, true, false) as $file) {
             if ($file['name'] !== 'RESTful.php') {
                 if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
@@ -78,6 +101,28 @@ final class RESTful {
                                         if (!key_exists($method_name, $this->controllers[$class_name]['mapping']))
                                             $this->controllers[$class_name]['mapping'][$method_name] = [];
                                     }
+                                    if ($method->getName() === $this->endpoint) {
+                                        foreach ($method->getParameters() as $param) {
+                                            foreach($param->getAttributes() as $param_attr) {
+                                                if ($param_attr->getName() === PathVariable::class) {
+                                                    foreach($param_attr->getArguments() as $arg_name => $arg_val) {
+                                                        if ($arg_name === 'require' && $arg_val && empty($request_parts[2]))
+                                                            RESTful::response('Not given Path varibale');
+
+                                                        if (!empty($request_parts[2])) {
+                                                            if ($arg_name === 'validate') {
+                                                                if (!$this->validate_param_type($arg_val, $request_parts[2]))
+                                                                    RESTful::response('Invalid data type');
+                                                            }
+                                                            if ($arg_name === 'name' && $arg_val !== $param->getName())
+                                                                RESTful::response('Invalid parameter name in function controller');
+                                                        }
+                                                        $this->parameters = $request_parts[2];
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                     $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
                                 }
                             }
@@ -86,7 +131,7 @@ final class RESTful {
                 }
             }
         }
-        
+
         foreach($this->controllers as $class_name => $controller) {
             $this->controllers[$controller['request']] = $controller;
             $this->controllers[$controller['request']]['class_name'] = $class_name;
@@ -101,30 +146,22 @@ final class RESTful {
         
         if (empty($this->controllers[$request_parts[0]]['mapping'][$_SERVER['REQUEST_METHOD']]))
             $this->forbidden(__LINE__);
-        
+
+
         $controller = $this->controllers[$request_parts[0]];
         $controller_endpoints = $controller['mapping'][$_SERVER['REQUEST_METHOD']];
-        
-        if (empty($controller_endpoints[$request_parts[1]]))
-            $this->forbidden(__LINE__);
-        
-        if (!empty($controller_endpoints[$request_parts[1]]['/']) && 
-            (count($request_parts) < 3 || empty($request_parts[2])))
-            $this->forbidden(__LINE__);
-        
-        if (empty($controller_endpoints[$request_parts[1]]['/']) &&
-            count($request_parts) > 2)
-            $this->forbidden(__LINE__);
 
+        
+        if (empty($controller_endpoints[$this->endpoint]))
+        $this->forbidden(__LINE__);
+        
         $class = $this->controllers[$request_parts[0]]['class_name'];
-        $method = $request_parts[1];
-        $argument = $request_parts[2];
+        $method = $this->endpoint;
         $post = json_decode(file_get_contents("php://input"), true);
         
         $class = new $class();
-        
-        if (!empty($argument))
-            $class->{$method}($argument, $post);
+        if (!empty($this->parameters))
+            $class->{$method}($this->parameters, $post);
         else
             $class->{$method}($post);
     }
@@ -148,5 +185,48 @@ final class RESTful {
      */
     public function show_controllers_structure () {
         print_r($this->controllers);
+    }
+
+    /**
+     * Returns response error
+     *
+     * @param integer $code
+     * @param string $message
+     * @return void
+     */
+    static public function response(string $message, int $code = 200) {
+        header($_SERVER['SERVER_PROTOCOL'] . ' '.$code);
+        echo json_encode(['error' => ['code' => $code, 'message' => $message]]);
+        exit;
+    }
+
+
+    static public function validate(array $params, array $with) {
+        if (empty($params))
+            RESTful::response('needs parameter');
+
+        foreach($params as $param_name => $param_value) {
+            if (!in_array($param_name, $with) || count($params) != count($with))
+                RESTful::response('invalid given parameters');
+
+            if (empty($param_value))
+                RESTful::response('invalid given value');
+        }
+    }
+
+    /**
+     * Check validation of given PathVariable
+     *
+     * @param [type] $type
+     * @param [type] $value
+     * @return bool
+     */
+    private function validate_param_type (Validate $validation_type, $value) : bool {
+        switch($validation_type) {
+            case Validate::INT: return preg_match('/^[0-9]+$/', $value);
+            case Validate::FLOAT: return preg_match('/^[0-9]+.[0-9]+$/', $value);
+            case Validate::STRING: return preg_match('/^[0-9a-zA-Z]+$/', $value);
+            default: return false;
+        }
     }
 }
