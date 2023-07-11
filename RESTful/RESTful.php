@@ -17,15 +17,6 @@ final class RESTful {
     private $endpoint = '';
     private mixed $parameters = [];
 
-
-    static public function with_authorization(
-        string $session_key_for_token, 
-        string $session_key_for_expiration
-    ) {
-        self::$session_key_for_token = $session_key_for_token;
-        self::$session_key_for_expiration =  $session_key_for_expiration;
-    }
-
     public function __construct(string $document_root, array $ignore_routes = []) {
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
@@ -185,24 +176,18 @@ final class RESTful {
     }
 
     /**
-     * Returns error message if endpoint not exists
+     * Activates RESTful with authorization
      *
-     * @param [type] $line
+     * @param string $session_key_for_token
+     * @param string $session_key_for_expiration
      * @return void
      */
-    private function forbidden ($line) {
-        header($_SERVER['SERVER_PROTOCOL'] . ' 404 not found');
-        echo json_encode(['error' => ['code' => 404, 'message' => 'not found']]);
-        exit;
-    }
-
-    /**
-     * Prints Controller classes
-     *
-     * @return void
-     */
-    public function show_controllers_structure () {
-        print_r($this->controllers);
+    static public function with_authorization(
+        string $session_key_for_token, 
+        string $session_key_for_expiration
+    ) {
+        self::$session_key_for_token = $session_key_for_token;
+        self::$session_key_for_expiration =  $session_key_for_expiration;
     }
 
     /**
@@ -218,8 +203,16 @@ final class RESTful {
         exit;
     }
 
-
-    static public function validate(array $params, array $with) {
+    /**
+     * Checks exists of parameter
+     * of given data to controller functions
+     * with given parameter name as array
+     *
+     * @param array $params
+     * @param array $with
+     * @return void
+     */
+    static public function exists(array $params, array $with) {
         if (empty($params))
             RESTful::response('needs parameter');
 
@@ -230,6 +223,18 @@ final class RESTful {
             if (empty($param_value))
                 RESTful::response('invalid given value');
         }
+    }
+
+    /**
+     * Returns error message if endpoint not exists
+     *
+     * @param [type] $line
+     * @return void
+     */
+    private function forbidden ($line) {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 404 not found');
+        echo json_encode(['error' => ['code' => 404, 'message' => 'not found']]);
+        exit;
     }
 
     /**
@@ -289,5 +294,14 @@ final class RESTful {
             session_destroy();
         }
         return ($this->is_with_authorization() && $token === $session_token);
+    }
+
+    /**
+     * Prints Controller classes
+     *
+     * @return void
+     */
+    public function show_controllers_structure () {
+        print_r($this->controllers);
     }
 }
