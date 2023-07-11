@@ -76,10 +76,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
-  /user/get_by_id:
+  /user/get_by_id/{id}:
     get:
       tags:
         - User
+      parameters:
+        - name: id
+          in: path
+          description: id of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         401:
           description: "Unauthorized"
