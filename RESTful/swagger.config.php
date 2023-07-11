@@ -1,4 +1,5 @@
 <?php
+include_once './ControllerMapper.php';
 
 class Swagger {
     private $content = [];
@@ -32,7 +33,7 @@ class Swagger {
         foreach($paths as $path) {
             array_push($this->content, '  '.$path['name'].':');
             array_push($this->content, '    '.strtolower($path['method']).':');
-            array_push($this->content, '      summary: "'.$path['params']['summary'].'"');
+            // array_push($this->content, '      summary: "'.$path['params']['summary'].'"');
             array_push($this->content, '      tags:');
             array_push($this->content, '        - '.$path['params']['tags']);
             array_push($this->content, '      responses:');
@@ -49,11 +50,60 @@ class Swagger {
     }
 }
 
+$mapper = new ControllerMapper();
+print_r($mapper->get_controllers());
 
 if (file_exists('./src/swagger-config2.yaml'))
     unlink('./src/swagger-config2.yaml');
 
 if (!file_exists('./src/swagger-config2.yaml')) {
+
+    // $url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+
+    $paths = [];
+
+    foreach($mapper->get_controllers() as $class_name => $controller) {
+        // $class_name
+        // $controller['request']
+       
+        foreach($controller['mapping'] as $method => $endpoint) {
+            // $method
+
+            foreach($endpoint as $endpoint_name => $argument) {
+                // $url.$controller['request']
+                $path = [];
+                // $url.$controller['request'].'/'.$endpoint_name.'/'.$argument['/']
+                $path['name'] = $controller['request'].'/'.$endpoint_name;
+                $path['method'] = $method;
+
+                $path['params'] = [
+                    'tags' => strtoupper($controller['request']),
+                    'responses' => [
+                        ['code' => 401, 'description' => "Unauthorized"],
+                        ['code' => 200, 'description' => "OK"]
+                    ]
+                ];
+
+                foreach($argument['parameters'] as $param) {
+    
+                    if ($param) {
+                        // $param->getName()
+        
+                        if ($param->getType()->getName() === 'array') {
+                            // $endpoint_name.$param->getName()
+
+                        } else {
+                            // $param->getType()->getName()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
     $swagger = new Swagger();
     $data = $swagger
             ->openapi("3.0.0")
@@ -78,7 +128,6 @@ if (!file_exists('./src/swagger-config2.yaml')) {
                     'name' => "/user/get_all",
                     'method' => 'get',
                     'params' => [
-                        'summary' => 'Returns all users',
                         'tags' => 'USERS',
                         'responses' => [
                             ['code' => 401, 'description' => "Unauthorized"],
@@ -90,11 +139,11 @@ if (!file_exists('./src/swagger-config2.yaml')) {
             ->build();
 
 
-    $file = fopen('./src/swagger-config2.yaml','a+');
+    $file = fopen('./local/swagger/src/swagger-config2.yaml','a+');
     fclose($file);
 
     foreach($data as $line) {
-        file_put_contents('./src/swagger-config2.yaml', $line."\n", FILE_APPEND);
+        file_put_contents('./local/swagger/src/swagger-config2.yaml', $line."\n", FILE_APPEND);
     }
 }
 ?>

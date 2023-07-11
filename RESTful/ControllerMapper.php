@@ -1,4 +1,6 @@
 <?php
+include_once './Scan.php';
+
 class ControllerMapper {
     private $controllers = [];
     private $classes = [];
@@ -6,8 +8,11 @@ class ControllerMapper {
     private mixed $parameters = [];
 
     public function __construct() {
-    
-        foreach (Scan::directory('.')->for('', true, true, false) as $file) {
+        $pwd = explode('/', getcwd());
+        array_pop($pwd);
+        $pwd = join('/', $pwd);
+
+        foreach (Scan::directory($pwd)->for('', true, true, false) as $file) {
             if ($file['name'] !== 'RESTful.php' && str_contains($file['name'], '.php')) {
                 if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
                     include_once $file['path'];
@@ -68,7 +73,8 @@ class ControllerMapper {
                                     }
                                  
                                     $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['parameters'] = $method->getParameters();
-                                    $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = explode('/'.$method->getName().'/', $attribute->getArguments()[0])[1];
+                                    $arg_parts =  explode('/'.$method->getName().'/', $attribute->getArguments()[0]);
+                                    $this->controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = count($arg_parts) > 1 ? $arg_parts[1] : '';
                                 }
                             }
                         }
