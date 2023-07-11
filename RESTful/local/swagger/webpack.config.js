@@ -48,5 +48,12 @@ module.exports = {
   output: {
     filename: '[name].bundle.js',
     path: outputPath,
-  }
+  },
+  devServer: {
+    port: 8080,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With',
+    }
+ },
 };

@@ -46,6 +46,7 @@ final class RESTful {
                                 $request_parts[0] === 'favicon.ico' ;
 
         // if (!$is_local_web_access) {
+            header("Access-Control-Allow-Origin: *");
             header("Content-Type: application/json; charset=UTF-8");
             header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
             header("Access-Control-Max-Age: 3600");
@@ -178,7 +179,7 @@ final class RESTful {
                 RESTful::response('Unauthorized', 401);
             }
         // } else {
-            // include_once 'local/www/index.php';
+        //     include_once 'local/swagger/index.php';
         // }
     }
 

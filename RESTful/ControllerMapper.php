@@ -11,8 +11,9 @@ class ControllerMapper {
         $pwd = explode('/', getcwd());
         array_pop($pwd);
         $pwd = join('/', $pwd);
+        // echo $pwd;
 
-        foreach (Scan::directory($pwd)->for('', true, true, false) as $file) {
+        foreach (Scan::directory($pwd/*'.'*/)->for('', true, true, false) as $file) {
             if ($file['name'] !== 'RESTful.php' && str_contains($file['name'], '.php')) {
                 if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
                     include_once $file['path'];

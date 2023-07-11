@@ -1,3 +1,47 @@
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The user id.
+        nickname:
+          type: string
+          description: The nickname.
+        password:
+          type: string
+          description: The hashed password.
+        avatar:
+          type: string
+          description: The avatar file name.
+        type:
+          type: string
+          description: The user type.
+        is_baned:
+          type: boolean
+          description: The user banned.
+        room_count:
+          type: integer
+          description: The user banned.
+        creation_time:
+          type: string
+          description: The user creation time.
+        expiration_time:
+          type: string
+          description: The nickname expiration time.
+        last_request_time:
+          type: string
+          description: The last request sending time.
+        session_time:
+          type: string
+          description: The session expiration time.
+        session_token:
+          type: string
+          description: The session token string.
+        is_logged_in:
+          type: boolean
+          description: The logged in.
 openapi: "3.0.0"
 info:
   version: "1.0.0"
@@ -7,7 +51,7 @@ info:
     name: MIT
     url: https://opensource.org/license/mit/
 servers:
-  - url: "http://localhost/PHP-API-Template/"
+  - url: "http://localhost/PHP-Chat-API/"
     description: "Chat API local"
   - url: "https://api.toolchain.tech/api/chat/v1/"
     description: "Chat API remote"
@@ -15,25 +59,46 @@ paths:
   /user/get_all:
     get:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
         200:
           description: "OK"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
   /user/get_by_id:
     get:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
         200:
           description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+            text/plain:
+              schema:
+                type: string
   /user/save_user:
     post:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -42,7 +107,7 @@ paths:
   /user/update_user:
     put:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -51,7 +116,7 @@ paths:
   /user/delete_user:
     delete:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -60,7 +125,7 @@ paths:
   /security/authenticate:
     post:
       tags:
-        - SECURITY
+        - Security
       responses:
         401:
           description: "Unauthorized"

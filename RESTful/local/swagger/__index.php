@@ -1,5 +1,5 @@
 <?php
-include_once './RESTful/local/classes/ControllerMapper.php';
+include_once './RESTful/ControllerMapper.php';
 
 $app_name = 'PHP RESTful API';
 $mapper = new ControllerMapper();
