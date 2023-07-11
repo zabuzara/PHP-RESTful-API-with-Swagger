@@ -109,7 +109,6 @@ final class RESTful {
                                 foreach ($reflection->getMethods() as $method) {
                                     $this->classes[$class_name][$method->getName()] = [];
                     
-                                    $args = [];
                                     foreach ($method->getAttributes() as $attribute) {
                                         if (!key_exists($attribute->getName(), $this->controllers[$class_name]['mapping'])) {
                                             $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
