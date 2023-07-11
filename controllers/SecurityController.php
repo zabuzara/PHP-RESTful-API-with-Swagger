@@ -12,10 +12,10 @@ class SecurityController {
     }
 
     #[PostMapping('/authenticate')]
-    public function authenticate (array $auth_data) {
-        RESTful::exists(params: $auth_data, with: ['username', 'password']);
-        $username = $auth_data['username'];
-        $password = $auth_data['password'];
+    public function authenticate (array $object) {
+        RESTful::exists(params: $object, with: ['username', 'password']);
+        $username = $object['username'];
+        $password = $object['password'];
 
         $response = SQL::set_context(Context::auto_load())->exec('SELECT `nickname`, `password` FROM `user` WHERE `nickname` = ?', [$username]);
         if (!empty($response) && count($response) > 0 && array_key_exists('password', $response[0])) {

@@ -40,7 +40,10 @@ final class RESTful {
             }
         }
         $request_parts =  explode('/', explode($document_root, $_SERVER['REQUEST_URI'])[1]);
-        $is_local_web_access = empty($request_parts[0]);
+        $is_local_web_access =  empty($request_parts[0]) || 
+                                $request_parts[0] === 'favicon-32x32.png' ||  
+                                $request_parts[0] === 'favicon-16x16.png' ||
+                                $request_parts[0] === 'favicon.ico' ;
 
         if (!$is_local_web_access) {
             header("Content-Type: application/json; charset=UTF-8");
@@ -172,10 +175,10 @@ final class RESTful {
                 else
                     $class->{$method}($post);
             } else {
-                RESTful::response('Access denied', 403);
+                RESTful::response('Unauthorized', 401);
             }
         } else {
-            include_once 'local/www/index.php';
+            // include_once 'local/www/index.php';
         }
     }
 
@@ -236,6 +239,7 @@ final class RESTful {
      * @return void
      */
     private function forbidden ($line) {
+        echo $_SERVER['REQUEST_URI'];
         header($_SERVER['SERVER_PROTOCOL'] . ' 404 not found');
         echo json_encode(['error' => ['code' => 404, 'message' => 'not found']]);
         exit;
