@@ -45,7 +45,7 @@ final class RESTful {
                                 $request_parts[0] === 'favicon-16x16.png' ||
                                 $request_parts[0] === 'favicon.ico' ;
 
-        if (!$is_local_web_access) {
+        // if (!$is_local_web_access) {
             header("Content-Type: application/json; charset=UTF-8");
             header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
             header("Access-Control-Max-Age: 3600");
@@ -177,9 +177,9 @@ final class RESTful {
             } else {
                 RESTful::response('Unauthorized', 401);
             }
-        } else {
+        // } else {
             // include_once 'local/www/index.php';
-        }
+        // }
     }
 
     /**
@@ -239,9 +239,8 @@ final class RESTful {
      * @return void
      */
     private function forbidden ($line) {
-        echo $_SERVER['REQUEST_URI'];
-        header($_SERVER['SERVER_PROTOCOL'] . ' 404 not found');
-        echo json_encode(['error' => ['code' => 404, 'message' => 'not found']]);
+        header($_SERVER['SERVER_PROTOCOL'] . ' 401 Unauthorized');
+        echo json_encode(['error' => ['code' => 401, 'message' => 'Unauthorized']]);
         exit;
     }
 

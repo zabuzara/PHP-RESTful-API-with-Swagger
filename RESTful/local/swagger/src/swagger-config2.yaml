@@ -1,4 +1,3 @@
-
 openapi: "3.0.0"
 info:
   version: "1.0.0"
@@ -9,21 +8,10 @@ info:
     url: https://opensource.org/license/mit/
 servers:
   - url: "http://localhost/PHP-API-Template/"
-    description: Chat API local
+  - description: "Chat API local"
+servers:
   - url: "https://api.toolchain.tech/api/chat/v1/"
-    description: "Chat API remote"
-components:
-  securitySchemes:
-    identity_server_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: "https://demo.identityserver.io/connect/authorize"
-          scopes:
-            api: "api"
-security:
-  - identity_server_auth:
-    - api
+  - description: "Chat API remote"
 paths:
   /user/get_all:
     get:

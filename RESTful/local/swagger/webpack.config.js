@@ -8,7 +8,7 @@ const outputPath = path.resolve(__dirname, 'dist');
 module.exports = {
   mode: 'development',
   entry: {
-    app: require.resolve('./RESTful/local/swagger/index'),
+    app: require.resolve('./src/index'),
   },
   resolve: {
     extensions: ['.ts', '.js'],
@@ -42,7 +42,7 @@ module.exports = {
       }
     ]}),
     new HtmlWebpackPlugin({
-      template: './RESTful/local/swagger/index.html'
+      template: 'index.html'
     })
   ],
   output: {

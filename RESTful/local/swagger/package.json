@@ -4,7 +4,8 @@
     "description": "A simple setup of Swagger UI with Webpack",
     "scripts": {
       "build": "webpack",
-      "start": "webpack-dev-server --open  --host localhost --port 8383"
+      "start": "webpack-dev-server --open  --host localhost --port 8383",
+      "swagger-config": "php swagger.config.php"
     },
     "author": "Shaun Luttin",
     "license": "Apache-2.0",
