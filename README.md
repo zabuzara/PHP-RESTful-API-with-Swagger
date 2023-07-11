@@ -1,7 +1,7 @@
 # PHP-API-Template
 ## Project
 RESTful API template for creating a API fast as possible in PHP. The ".haccess" file helps to activate CRUD operations on Apache web server. This project includes "Simple-Entity-Framework" for
-communicate with database.
+communicate with database. You can use Bearer Authorization with in your API. For this functionality you should give two key names, that will be include in $_SESSION for handle access to endpoints.
 
 ## Usage
 ```php
