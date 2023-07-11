@@ -23,6 +23,5 @@
       "style-loader": "^3.3.1",
       "swagger-ui": "^4.14.0",
       "yaml-loader": "^0.8.0"
-    },
-    "proxy": "http://localhost:8383"
+    }
   }
