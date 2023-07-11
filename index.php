@@ -1,7 +1,8 @@
 <?php
-include_once './entity-framework/index.php';
-include_once './RESTful/RESTful.php';
+include_once './RESTful/index.php';
 
-// echo "<pre>";
-/*(*/new RESTful();//)->show_controllers_structure();
-// echo "</pre>";
+RESTful::with_authorization(
+    session_key_for_token: 'token', 
+    session_key_for_expiration: 'expiration_time'
+);
+new RESTful(document_root: '/PHP-Chat-API/', ignore_routes: ['security']);
