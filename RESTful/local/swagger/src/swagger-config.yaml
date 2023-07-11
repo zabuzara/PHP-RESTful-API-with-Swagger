@@ -8,27 +8,59 @@ info:
     url: https://opensource.org/license/mit/
 servers:
   - url: "http://localhost/PHP-API-Template/"
-    description: Chat API local
+    description: "Chat API local"
   - url: "https://api.toolchain.tech/api/chat/v1/"
     description: "Chat API remote"
-components:
-  securitySchemes:
-    identity_server_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: "https://demo.identityserver.io/connect/authorize"
-          scopes:
-            api: "api"
-security:
-  - identity_server_auth:
-    - api
 paths:
   /user/get_all:
     get:
-      summary: "Returns all users"
       tags:
-        - USERS
+        - USER
+      responses:
+        401:
+          description: "Unauthorized"
+        200:
+          description: "OK"
+  /user/get_by_id:
+    get:
+      tags:
+        - USER
+      responses:
+        401:
+          description: "Unauthorized"
+        200:
+          description: "OK"
+  /user/save_user:
+    post:
+      tags:
+        - USER
+      responses:
+        401:
+          description: "Unauthorized"
+        200:
+          description: "OK"
+  /user/update_user:
+    put:
+      tags:
+        - USER
+      responses:
+        401:
+          description: "Unauthorized"
+        200:
+          description: "OK"
+  /user/delete_user:
+    delete:
+      tags:
+        - USER
+      responses:
+        401:
+          description: "Unauthorized"
+        200:
+          description: "OK"
+  /security/authenticate:
+    post:
+      tags:
+        - SECURITY
       responses:
         401:
           description: "Unauthorized"

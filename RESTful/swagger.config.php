@@ -20,10 +20,10 @@ class Swagger {
     }
 
     public function servers(array $servers = [['url' => '', 'description' => '']]) {
+        array_push($this->content, "servers:");
         foreach($servers as $server) {
-            array_push($this->content, "servers:");
             array_push($this->content, '  - url: "'.$server['url'].'"');
-            array_push($this->content, '  - description: "'.$server['description'].'"');
+            array_push($this->content, '    description: "'.$server['description'].'"');
         }
         return $this;
     }
@@ -51,29 +51,17 @@ class Swagger {
 }
 
 $mapper = new ControllerMapper();
-print_r($mapper->get_controllers());
 
-if (file_exists('./src/swagger-config2.yaml'))
-    unlink('./src/swagger-config2.yaml');
+if (file_exists('./local/swagger/src/swagger-config.yaml'))
+    unlink('./local/swagger/src//swagger-config.yaml');
 
-if (!file_exists('./src/swagger-config2.yaml')) {
-
-    // $url = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-
+if (!file_exists('./local/swagger/src//swagger-config.yaml')) {
     $paths = [];
-
     foreach($mapper->get_controllers() as $class_name => $controller) {
-        // $class_name
-        // $controller['request']
-       
         foreach($controller['mapping'] as $method => $endpoint) {
-            // $method
-
             foreach($endpoint as $endpoint_name => $argument) {
-                // $url.$controller['request']
                 $path = [];
-                // $url.$controller['request'].'/'.$endpoint_name.'/'.$argument['/']
-                $path['name'] = $controller['request'].'/'.$endpoint_name;
+                $path['name'] = '/'.$controller['request'].'/'.$endpoint_name;
                 $path['method'] = $method;
 
                 $path['params'] = [
@@ -87,8 +75,6 @@ if (!file_exists('./src/swagger-config2.yaml')) {
                 foreach($argument['parameters'] as $param) {
     
                     if ($param) {
-                        // $param->getName()
-        
                         if ($param->getType()->getName() === 'array') {
                             // $endpoint_name.$param->getName()
 
@@ -97,11 +83,11 @@ if (!file_exists('./src/swagger-config2.yaml')) {
                         }
                     }
                 }
+
+                array_push($paths, $path);
             }
         }
     }
-
-
 
 
     $swagger = new Swagger();
@@ -123,27 +109,17 @@ if (!file_exists('./src/swagger-config2.yaml')) {
                     "description" => "Chat API remote"
                 ]
             ])
-            ->paths([
-                [
-                    'name' => "/user/get_all",
-                    'method' => 'get',
-                    'params' => [
-                        'tags' => 'USERS',
-                        'responses' => [
-                            ['code' => 401, 'description' => "Unauthorized"],
-                            ['code' => 200, 'description' => "OK"]
-                        ]
-                    ]
-                ]
-            ])
+            ->paths($paths)
             ->build();
 
 
-    $file = fopen('./local/swagger/src/swagger-config2.yaml','a+');
+    $file = fopen('./local/swagger/src/swagger-config.yaml','a+');
     fclose($file);
 
     foreach($data as $line) {
-        file_put_contents('./local/swagger/src/swagger-config2.yaml', $line."\n", FILE_APPEND);
+        file_put_contents('./local/swagger/src/swagger-config.yaml', $line."\n", FILE_APPEND);
     }
+
+    exec('npm start --prefix ./local/swagger');
 }
 ?>
