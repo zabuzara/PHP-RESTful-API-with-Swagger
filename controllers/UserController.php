@@ -1,4 +1,7 @@
 <?php
+/**
+ * @author Omid Malekzadeh Eshtajarani <zabuzara@yahoo.com>
+ */
 #[Controller]
 #[RequestMapping('user')]
 class UserController {
@@ -18,31 +21,35 @@ class UserController {
         echo json_encode($this->repository->find_by_id(UserEntity::class, $id));
     }
 
-    #[GetMapping('/get_by_forename/{forename}')]
-    public function get_by_forename(#[PathVariable(name: 'forename', require: true, validate: Validate::STRING)] string $forename) {
-        echo json_encode($this->repository->find_by_forename(UserEntity::class, $forename));
-    }
-
-    #[GetMapping('/get_by_surname/{surname}')]
-    public function get_by_surname(#[PathVariable(name: 'surname', require: true, validate: Validate::STRING)] string $surname) {
-        echo json_encode($this->repository->find_by_surname(UserEntity::class, $surname));
-    }
-
-    #[GetMapping('/get_by_email/{email}')]
-    public function get_by_email(#[PathVariable(name: 'email', require: true, validate: Validate::STRING)] string $email) {
-        echo json_encode($this->repository->find_by_email(UserEntity::class, $email));
-    }
-
     #[PostMapping('/save_user')]
-    public function save_user(array $user) {
-        $entity = EntityManager::array_to_entity(UserEntity::class, $user);
-        $this->repository->persist($entity);
+    public function save_user(array $user_data) {
+        RESTful::exists(params: $user_data, with: ['nickname', 'password']);
+
+        $user = new UserEntity();
+        $user->nickname = $user_data['nickname'];
+        $user->password = Password::hash($user_data['password']);
+        $user->creation_time = Date('Y-m-d h:m:s', time());
+        $user->expiration_time = Date('Y-m-d h:m:s', time() + 86400);
+        $user->last_request_time = Date('Y-m-d h:m:s', time());
+        $user->session_time = Date('Y-m-d h:m:s', time() + 1800);
+        $user->session_token = Token::generate_token();
+        $user->is_logged_in = true; 
+        $this->repository->persist($user);
     }
 
     #[PutMapping('/update_user/{id}')]
-    public function update_user(#[PathVariable(name: 'id', require: true, validate: Validate::INT)] int $id, array $user) {
-        $entity = EntityManager::array_to_entity(UserEntity::class, $user);
-        $this->repository->update($entity, $id);
+    public function update_user(#[PathVariable(name: 'id', require: true, validate: Validate::INT)] int $id, array $user_object) {
+        $to_update_user = $this->repository->find_by_id(UserEntity::class, $id);
+        if (!is_null($to_update_user)) {
+            foreach($user_object as $prop => $value) {
+                if ($prop === 'password')
+                    $value = Password::hash($value);
+                $to_update_user->{$prop} = $value;
+            }
+            $this->repository->update($to_update_user, $id);
+        } else {
+            RESTful::response('User not found');
+        }
     }
 
     #[DeleteMapping('/delete_user/{id}')]

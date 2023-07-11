@@ -39,15 +39,15 @@ final class RESTful {
                 }
             }
         }
-
-        header("Content-Type: application/json; charset=UTF-8");
-        header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
-        header("Access-Control-Max-Age: 3600");
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
         $request_parts =  explode('/', explode($document_root, $_SERVER['REQUEST_URI'])[1]);
         $is_local_web_access = empty($request_parts[0]);
 
         if (!$is_local_web_access) {
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST, GET, PUT, DELETE, OPTIONS");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
             if (($this->is_with_authorization() && $this->is_valid_token() && !in_array($request_parts[0], $ignore_routes)) ||
                 (!$this->is_with_authorization()) ||
                 (in_array($request_parts[0], $ignore_routes))) {
@@ -174,6 +174,8 @@ final class RESTful {
             } else {
                 RESTful::response('Access denied', 403);
             }
+        } else {
+            include_once 'local/www/index.php';
         }
     }
 
