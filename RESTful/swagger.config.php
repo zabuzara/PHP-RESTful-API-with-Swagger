@@ -1,6 +1,8 @@
 <?php
 include_once './ControllerMapper.php';
 
+$yaml_path = './swagger/src/swagger-config.yaml';
+
 class Swagger {
     private $content = [];
     public function openapi(string $version) {
@@ -52,10 +54,10 @@ class Swagger {
 
 $mapper = new ControllerMapper();
 
-if (file_exists('./local/swagger/src/swagger-config.yaml'))
-    unlink('./local/swagger/src//swagger-config.yaml');
+if (file_exists($yaml_path))
+    unlink($yaml_path);
 
-if (!file_exists('./local/swagger/src//swagger-config.yaml')) {
+if (!file_exists($yaml_path)) {
     $paths = [];
     foreach($mapper->get_controllers() as $class_name => $controller) {
         foreach($controller['mapping'] as $method => $endpoint) {
@@ -113,11 +115,11 @@ if (!file_exists('./local/swagger/src//swagger-config.yaml')) {
             ->build();
 
 
-    $file = fopen('./local/swagger/src/swagger-config.yaml','a+');
+    $file = fopen($yaml_path,'a+');
     fclose($file);
 
     foreach($data as $line) {
-        file_put_contents('./local/swagger/src/swagger-config.yaml', $line."\n", FILE_APPEND);
+        file_put_contents($yaml_path, $line."\n", FILE_APPEND);
     }
 
     exec('npm start --prefix ./local/swagger');
