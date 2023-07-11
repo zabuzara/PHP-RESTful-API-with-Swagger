@@ -1,5 +1,24 @@
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+            message:
+              type: string
+    NewUser:
+      type: object
+      properties:
+        nickname:
+          type: string
+          description: The nickname
+        password:
+          type: string
+          description: The password
     User:
       type: object
       properties:
@@ -42,6 +61,45 @@ components:
         is_logged_in:
           type: boolean
           description: The logged in.
+    UserRequestExample:
+      type: object
+      properties:
+        nickname:
+          type: string
+          example: "test_user"
+        password:
+          type: string
+          example: "test_password"
+        avatar:
+          type: string
+          example: "default.png"
+        type:
+          type: string
+          example: "User"
+        is_baned:
+          type: boolean
+          example: false
+        room_count:
+          type: integer
+          example: 0
+        creation_time:
+          type: string
+          example: "2023-01-01 12:00:00"
+        expiration_time:
+          type: string
+          example: "2023-01-02 12:00:00"
+        last_request_time:
+          type: string
+          example: "2023-01-01 12:00:00"
+        session_time:
+          type: string
+          example: "2023-01-01 12:30:00"
+        session_token:
+          type: string
+          example: "NGIxOTU0YTE2MzU2Yzg2MTMwNmI3M2YxNjExZWQ4MTJkMWQ0MGI5N2VjMzAzYmIyZDEyMzM4NDczOTQwNjMwZTMwOTk3ZGJiNTYwZjk4ZWFmNDc5NTlkYTVjMzAwYTRl"
+        is_logged_in:
+          type: boolean
+          example: false
 openapi: "3.0.0"
 info:
   version: "1.0.0"
@@ -51,10 +109,10 @@ info:
     name: MIT
     url: https://opensource.org/license/mit/
 servers:
-  - url: "http://localhost/PHP-Chat-API/"
-    description: "Chat API local"
+  - url: "http://localhost/PHP-API-Template/"
+    description: "RESTful API local"
   - url: "https://api.toolchain.tech/api/chat/v1/"
-    description: "Chat API remote"
+    description: "RESTful API remote"
 paths:
   /user/get_all:
     get:
@@ -107,24 +165,66 @@ paths:
     post:
       tags:
         - User
+      requestBody:
+        description: Create a new user in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+        required: true
       responses:
         401:
           description: "Unauthorized"
         200:
           description: "OK"
-  /user/update_user:
+  /user/update_user/{id}:
     put:
       tags:
         - User
+      parameters:
+        - name: id
+          in: path
+          description: id of user to update
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update a old user in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
       responses:
         401:
           description: "Unauthorized"
         200:
           description: "OK"
-  /user/delete_user:
+  /user/delete_user/{id}:
     delete:
       tags:
         - User
+      parameters:
+        - name: id
+          in: path
+          description: id of user to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
       responses:
         401:
           description: "Unauthorized"

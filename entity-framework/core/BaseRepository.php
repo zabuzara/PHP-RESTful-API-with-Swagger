@@ -22,7 +22,11 @@ class BaseRepository extends EntityManager implements IRepository {
                 break;
             }
         }
-        $this->insert_object_into_table($entity, $columns);
+        try {
+            $this->insert_object_into_table($entity, $columns);
+        } catch (Exception $e) {
+            echo json_encode($e);
+        }
     }
 
     /**
@@ -33,14 +37,19 @@ class BaseRepository extends EntityManager implements IRepository {
             $table_name = $this->get_table_name($entity_name);
             $primary_key_name = $this->get_primary_key($table_name);
             if (!empty($primary_key_name)) {
-                $result = $this->get_context()->exec('SELECT * FROM `'.$table_name.'` WHERE `'.$primary_key_name.'` = ?',[$id]);
+                try {
+                    $result = $this->get_context()->exec('SELECT * FROM `'.$table_name.'` WHERE `'.$primary_key_name.'` = ?',[$id]);
 
-                if (!empty($result) && count($result) > 0) {
-                    if (class_exists($entity_name)) {
-                        return EntityManager::array_to_entity($entity_name, $result[0]);
-                    } else {
-                        return $result[0];
+                    if (!empty($result) && count($result) > 0) {
+                        if (class_exists($entity_name)) {
+                            return EntityManager::array_to_entity($entity_name, $result[0]);
+                        } else {
+                            return $result[0];
+                        }
                     }
+                } catch (Exception $e) {
+                    echo json_encode($e);
+                    return null;
                 }
             }
         }
@@ -55,18 +64,23 @@ class BaseRepository extends EntityManager implements IRepository {
             $table_name = $this->get_table_name($entity_name);
             $primary_key_name = $this->get_primary_key($table_name);
             if (!empty($primary_key_name)) {
-                $result = $this->get_context()->exec('SELECT * FROM `'.$table_name.'`');
+                try {
+                    $result = $this->get_context()->exec('SELECT * FROM `'.$table_name.'`');
 
-                if (!empty($result) && count($result) > 0) {
-                    if (class_exists($entity_name)) {
-                        $entities = [];
-                        foreach($result as $row) {
-                            array_push($entities, EntityManager::array_to_entity($entity_name, $row));
+                    if (!empty($result) && count($result) > 0) {
+                        if (class_exists($entity_name)) {
+                            $entities = [];
+                            foreach($result as $row) {
+                                array_push($entities, EntityManager::array_to_entity($entity_name, $row));
+                            }
+                            return $entities;
+                        } else {
+                            return $result[0];
                         }
-                        return $entities;
-                    } else {
-                        return $result[0];
                     }
+                } catch (Exception $e) {
+                    echo json_encode($e);
+                    return [];
                 }
             }
         }
@@ -81,8 +95,13 @@ class BaseRepository extends EntityManager implements IRepository {
             $table_name = $this->get_table_name($entity_name);
             $primary_key_name = $this->get_primary_key($table_name);
             if (!empty($primary_key_name)) {
-                $result = $this->get_context()->exec('DELETE FROM `'.$table_name.'` WHERE `'.$primary_key_name.'` = ?',[$id]);
-                return true;
+                try {
+                    $this->get_context()->exec('DELETE FROM `'.$table_name.'` WHERE `'.$primary_key_name.'` = ?',[$id]);
+                    return true;
+                } catch (Exception $e) {
+                    echo json_encode($e);
+                    return false;
+                }
             }
         }
         return false;
@@ -107,8 +126,14 @@ class BaseRepository extends EntityManager implements IRepository {
                     }, (array) $entity, array_keys((array) $entity)), fn($item) => !is_null($item));
                     array_push($set_values, $entity->id);
                     $set_values = array_values($set_values);
-                    $result = $this->get_context()->exec('UPDATE `'.$table_name.'` SET '.$set_parts.' WHERE `'.$primary_key_name.'` = ?', $set_values);
-                    return true;
+                    $set_values = array_map(fn($item) => is_bool($item) ? ($item ? 1 : 0) : $item, $set_values);
+                    try {
+                        $this->get_context()->exec('UPDATE `'.$table_name.'` SET '.$set_parts.' WHERE `'.$primary_key_name.'` = ?', $set_values);
+                        return true;
+                    } catch (Exception $e) {
+                        echo json_encode($e);
+                        return false;
+                    }
                 }
             }
         }
