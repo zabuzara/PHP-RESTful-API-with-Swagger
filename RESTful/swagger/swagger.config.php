@@ -1,10 +1,9 @@
 <?php
-include_once './RESTful/Scan.php';
-echo "now";
+include_once './../Scan.php';
 
-$yaml_path = 'src/swagger-config2.yaml';
+$yaml_path = './src/swagger-config2.yaml';
 
-class Swagger {
+final class Swagger {
     private $content = [];
     public function openapi(string $version) {
         array_push($this->content, 'openapi: "'.$version.'"');
@@ -53,190 +52,180 @@ class Swagger {
     }
 }
 
-// abstract class ControllerMapper {
-//     static private $controllers = [];
-//     static private $classes = [];
-//     static private $endpoint = '';
-//     static private mixed $parameters = [];
-//     static private array $includes = [];
+abstract class ControllerMapper {
+    static private $controllers = [];
+    static private $classes = [];
+    static private $endpoint = '';
+    static private mixed $parameters = [];
+    static private array $includes = [];
 
-//     static public function get_controllers() {
-//         $pwd = explode('/', getcwd());
-//         array_pop($pwd);
-//         $pwd = join('/', $pwd);
-//         // echo $pwd;
-  
-//         foreach (Scan::directory($pwd/*'.'*/)->for('', true, true, false) as $file) {
-//             if ($file['name'] !== 'RESTful.php' && 
-//                 str_contains($file['name'], '.php') && 
-//                 $file['name'] !== 'swagger.config.php.php' &&
-//                 $file['name'] !== 'ControllerMapper.php' &&
-//                 $file['name'] !== 'Scan.php') {
+    static public function get_controllers() {
+        $pwd = explode('/', getcwd());
+        array_pop($pwd);
+        array_pop($pwd);
+        $pwd = join('/', $pwd);
+    
+        echo $pwd;
+        foreach (Scan::directory($pwd/*'.'*/)->for('', true, true, false) as $file) {
+            if ($file['name'] !== 'RESTful.php' && 
+                str_contains($file['name'], '.php')) {
 
-
-//                 if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
+                if (preg_match('/\n#\[Controller\]\n/', file_get_contents($file['path']))) {
               
-//                     if (!in_array($file['name'], self::$includes)) {
+                    if (!in_array($file['name'], self::$includes)) {
+                        include_once $file['path'];                      
+                        array_push(self::$includes, $file['name']);
 
-//                         // echo json_encode($file);
-//                         // exit();
-                        
+                        if (class_exists(explode('.php', $file['name'])[0])) { 
+                    
+                            $class_name = explode('.php', $file['name'])[0];
+                            $reflection = new ReflectionClass($class_name);
 
-//                         include_once $file['path'];
-                      
-//                         array_push(self::$includes, $file['name']);
-//                     }
-
-                 
-        
-//                     if (class_exists(explode('.php', $file['name'])[0])) { 
-                
-//                         $class_name = explode('.php', $file['name'])[0];
-//                         $reflection = new ReflectionClass($class_name);
-
-//                         foreach ($reflection->getAttributes() as $attribute) {
-//                             if ($attribute->getName() === Controller::class) {
-//                                 self::$controllers[$class_name]['request'] = '';
-//                                 self::$controllers[$class_name]['class_path'] = $file['path'];
-//                                 self::$classes[$class_name] = [];
-//                             } 
-                
-//                             if ($attribute->getName() !== Controller::class) {
-//                                 if (!array_key_exists('request', self::$controllers[$class_name]))
-//                                     break;
-                
-//                                 self::$controllers[$class_name]['request'] = $attribute->getArguments()[0];
-//                             }
-//                         }
-                
-//                         if (array_key_exists($class_name, self::$controllers)) {
-//                             self::$controllers[$class_name]['mapping'] = [];
-//                             foreach ($reflection->getMethods() as $method) {
-//                                 self::$classes[$class_name][$method->getName()] = [];
-                                
-//                                 foreach ($method->getAttributes() as $attribute) {
-//                                     if (!key_exists($attribute->getName(), self::$controllers[$class_name]['mapping'])) {
-//                                         $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
+                            foreach ($reflection->getAttributes() as $attribute) {
+                                if ($attribute->getName() === Controller::class) {
+                                    self::$controllers[$class_name]['request'] = '';
+                                    self::$controllers[$class_name]['class_path'] = $file['path'];
+                                    self::$classes[$class_name] = [];
+                                } 
+                    
+                                if ($attribute->getName() !== Controller::class) {
+                                    if (!array_key_exists('request', self::$controllers[$class_name]))
+                                        break;
+                    
+                                    self::$controllers[$class_name]['request'] = $attribute->getArguments()[0];
+                                }
+                            }
+                    
+                            if (array_key_exists($class_name, self::$controllers)) {
+                                self::$controllers[$class_name]['mapping'] = [];
+                                foreach ($reflection->getMethods() as $method) {
+                                    self::$classes[$class_name][$method->getName()] = [];
+                                    
+                                    foreach ($method->getAttributes() as $attribute) {
+                                        if (!key_exists($attribute->getName(), self::$controllers[$class_name]['mapping'])) {
+                                            $method_name = strtoupper(explode('Mapping', $attribute->getName())[0]);
+                                            
+                                            if (!key_exists($method_name, self::$controllers[$class_name]['mapping']))
+                                                self::$controllers[$class_name]['mapping'][$method_name] = [];
+                                        }
+                                        if ($method->getName() === self::$endpoint) {
+                                            foreach ($method->getParameters() as $param) {
+                                                foreach($param->getAttributes() as $param_attr) {
                                         
-//                                         if (!key_exists($method_name, self::$controllers[$class_name]['mapping']))
-//                                             self::$controllers[$class_name]['mapping'][$method_name] = [];
-//                                     }
-//                                     if ($method->getName() === self::$endpoint) {
-//                                         foreach ($method->getParameters() as $param) {
-//                                             foreach($param->getAttributes() as $param_attr) {
-                                      
-//                                                 if ($param_attr->getName() === PathVariable::class) {
-//                                                     foreach($param_attr->getArguments() as $arg_name => $arg_val) {
-//                                                         // if ($arg_name === 'require' && $arg_val && empty($request_parts[2]))
-//                                                         //     RESTful::response('Not given Path varibale');
+                                                    if ($param_attr->getName() === PathVariable::class) {
+                                                        foreach($param_attr->getArguments() as $arg_name => $arg_val) {
+                                                            if ($arg_name === 'require' && $arg_val && empty($request_parts[2]))
+                                                                RESTful::response('Not given Path varibale');
 
-//                                                         if (!empty($request_parts[2])) {
-//                                                             if ($arg_name === 'validate') {
-//                                                                 // if (!self::$validate_param_type($arg_val, $request_parts[2]))
-//                                                                 //     RESTful::response('Invalid data type');
-//                                                             }
-//                                                             // if ($arg_name === 'name' && $arg_val !== $param->getName())
-//                                                             //     RESTful::response('Invalid parameter name in function controller');
-//                                                         }
-//                                                         self::$parameters = $request_parts[2];
-//                                                     }
-//                                                 }
-//                                             }
-//                                         }
-//                                     }
-                                 
-//                                     self::$controllers[$class_name]['mapping'][$method_name][$method->getName()]['parameters'] = $method->getParameters();
-//                                     $arg_parts =  explode('/'.$method->getName().'/', $attribute->getArguments()[0]);
-//                                     self::$controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = count($arg_parts) > 1 ? $arg_parts[1] : '';
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//         return self::$controllers;
-//     }
-// }
+                                                            if (!empty($request_parts[2])) {
+                                                                if ($arg_name === 'validate') {
+                                                                    // if (!self::$validate_param_type($arg_val, $request_parts[2]))
+                                                                    //     RESTful::response('Invalid data type');
+                                                                }
+                                                                if ($arg_name === 'name' && $arg_val !== $param->getName())
+                                                                    RESTful::response('Invalid parameter name in function controller');
+                                                            }
+                                                            self::$parameters = $request_parts[2];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    
+                                        self::$controllers[$class_name]['mapping'][$method_name][$method->getName()]['parameters'] = $method->getParameters();
+                                        $arg_parts =  explode('/'.$method->getName().'/', $attribute->getArguments()[0]);
+                                        self::$controllers[$class_name]['mapping'][$method_name][$method->getName()]['/'] = count($arg_parts) > 1 ? $arg_parts[1] : '';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return self::$controllers;
+    }
+}
 
 
-// if (file_exists($yaml_path))
-//     unlink($yaml_path);
+if (file_exists($yaml_path))
+    unlink($yaml_path);
 
 
-// if (!file_exists($yaml_path)) {
-//     $paths = [];
-  
-//     $controllers = ControllerMapper::get_controllers();
-  
+if (!file_exists($yaml_path)) {
+    $paths = [];
+    $controllers = ControllerMapper::get_controllers();
 
-//     if (!empty($controllers)) {
-//         foreach($controllers as $class_name => $controller) {
-//             foreach($controller['mapping'] as $method => $endpoint) {
-//                 foreach($endpoint as $endpoint_name => $argument) {
-//                     $path = [];
-//                     $path['name'] = '/'.$controller['request'].'/'.$endpoint_name;
-//                     $path['method'] = $method;
+    print_r($controllers);
 
-//                     $path['params'] = [
-//                         'tags' => strtoupper($controller['request']),
-//                         'responses' => [
-//                             ['code' => 401, 'description' => "Unauthorized"],
-//                             ['code' => 200, 'description' => "OK"]
-//                         ]
-//                     ];
+    if (!empty($controllers)) {
+        foreach($controllers as $class_name => $controller) {
+            foreach($controller['mapping'] as $method => $endpoint) {
+                foreach($endpoint as $endpoint_name => $argument) {
+                    $path = [];
+                    $path['name'] = '/'.$controller['request'].'/'.$endpoint_name;
+                    $path['method'] = $method;
 
-//                     foreach($argument['parameters'] as $param) {
+                    $path['params'] = [
+                        'tags' => strtoupper($controller['request']),
+                        'responses' => [
+                            ['code' => 401, 'description' => "Unauthorized"],
+                            ['code' => 200, 'description' => "OK"]
+                        ]
+                    ];
+
+                    foreach($argument['parameters'] as $param) {
         
-//                         if ($param) {
-//                             if ($param->getType()->getName() === 'array') {
-//                                 // $endpoint_name.$param->getName()
+                        if ($param) {
+                            if ($param->getType()->getName() === 'array') {
+                                // $endpoint_name.$param->getName()
 
-//                             } else {
-//                                 // $param->getType()->getName()
-//                             }
-//                         }
-//                     }
+                            } else {
+                                // $param->getType()->getName()
+                            }
+                        }
+                    }
 
-//                     array_push($paths, $path);
-//                 }
-//             }
-//         }
-
-
-//         $swagger = new Swagger();
-//         $data = $swagger
-//                 ->openapi("3.0.0")
-//                 ->info(
-//                     version: "1.0.0", 
-//                     title: "Swagger RESTful PHP API", 
-//                     description: "PHP RESTful API with Swagger", 
-//                     license: ['name' => "MIT", 'url' => "https://opensource.org/license/mit/"]
-//                 )
-//                 ->servers([
-//                     [
-//                         'url' => "http://localhost/PHP-API-Template/",
-//                         "description" => "Chat API local"
-//                     ],
-//                     [
-//                         'url' => "https://api.toolchain.tech/api/chat/v1/",
-//                         "description" => "Chat API remote"
-//                     ]
-//                 ])
-//                 ->paths($paths)
-//                 ->build();
+                    array_push($paths, $path);
+                }
+            }
+        }
 
 
-//         $file = fopen($yaml_path,'a+');
+        $swagger = new Swagger();
+        $data = $swagger
+                ->openapi("3.0.0")
+                ->info(
+                    version: "1.0.0", 
+                    title: "Swagger RESTful PHP API", 
+                    description: "PHP RESTful API with Swagger", 
+                    license: ['name' => "MIT", 'url' => "https://opensource.org/license/mit/"]
+                )
+                ->servers([
+                    [
+                        'url' => "http://localhost/PHP-API-Template/",
+                        "description" => "Chat API local"
+                    ],
+                    [
+                        'url' => "https://api.toolchain.tech/api/chat/v1/",
+                        "description" => "Chat API remote"
+                    ]
+                ])
+                ->paths($paths)
+                ->build();
 
-//         foreach($data as $line) {
-//             file_put_contents($yaml_path, $line."\n", FILE_APPEND);
-//         }
+     
+        $file = fopen($yaml_path,'a+');
+        fclose($file);
 
-//         // exec('npm start --prefix ./local/swagger');
-//         exec('npm start');
-//     }
-// }
+        foreach($data as $line) {
+            file_put_contents($yaml_path, $line."\n", FILE_APPEND);
+        }
+
+        // exec('npm start --prefix ./local/swagger');
+        // exec('npm start');
+    }
+}
 
 
 ?>

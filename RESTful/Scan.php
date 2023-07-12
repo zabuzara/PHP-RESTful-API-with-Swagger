@@ -43,16 +43,9 @@ final class Scan {
                 if($security_counter++ > Scan::RECURSION_COUNT)
                     break;
 
-              
-    
                 if ($entry != "." && $entry != ".." && 
-                    $entry !== Scan::class.'.php' &&
-                    $entry != 'swagger.config.php') {
-                    
-                    if ( $entry == 'swagger.config.php') {
-                        echo json_encode($this->path.'/'.$entry);
-                    }
-                    
+                    $entry !== Scan::class.'.php') {
+                
                     if (is_file($this->path.'/'.$entry)) {
                         if (($ignore_case && str_contains(strtolower($entry), strtolower($file_name))) || 
                             (!$ignore_case && str_contains($entry, $file_name))) {

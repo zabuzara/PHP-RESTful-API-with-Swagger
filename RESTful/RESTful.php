@@ -78,12 +78,11 @@ final class RESTful {
             foreach (Scan::directory('.')->for('', true, true, false) as $file) {
                  
                 if ($file['name'] !== 'RESTful.php' && 
-                    str_contains($file['name'], '.php') && 
-                    $file['name'] !== 'swagger.config.php') {
+                    str_contains($file['name'], '.php')) {
 
                         
-                    if (str_contains(file_get_contents($file['path']), '#[Controller]')) {
-                        if (!in_array($file['name'], self::$includes)) {
+                    if (preg_match('/\n#\[Controller\]\n/', file_get_contents($file['path']))) {
+                            if (!in_array($file['name'], self::$includes)) {
                             include_once $file['path'];
                             array_push(self::$includes, $file['name']);
                             
