@@ -29,7 +29,9 @@
         if (property_exists($context_object, 'folder_structure')) {
             $import_structure = (array) $context_object->folder_structure;
             foreach($import_structure as $dir => $files) {
+              
                 foreach($files as $file) {
+                  
                     include_once("entity-framework/".$dir."/".$file.".php");
 
                     if ($file === 'Configurator') {

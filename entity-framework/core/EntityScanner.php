@@ -19,20 +19,22 @@ abstract class EntityScanner {
      */
     static function is_entity (string $class_path, string $class_name) : bool {
         if (file_exists($class_path)) {
-            include_once $class_path;
-  
-            if (class_exists($class_name)) {
-                $reflection = new ReflectionClass($class_name);
-                $is_table_attr = array_filter($reflection->getAttributes(), function($attr) {
-                    return str_contains($attr->getName(), 'TABLE');
-                });
-   
-                if (!empty($is_table_attr) && count($is_table_attr) > 0) {
-                    if ($is_table_attr[0]) {
-                        if (is_subclass_of($class_name, BaseEntity::class)) {
-                            return true;
-                        } else {
-                            throw new EntityScannerException('The entity class should extends the BaseEntity class.');
+            if (preg_match('/\n#\[TABLE\(".+"\)\]\nclass/', file_get_contents($class_path))) {
+                include_once $class_path;
+    
+                if (class_exists($class_name)) {
+                    $reflection = new ReflectionClass($class_name);
+                    $is_table_attr = array_filter($reflection->getAttributes(), function($attr) {
+                        return str_contains($attr->getName(), 'TABLE');
+                    });
+    
+                    if (!empty($is_table_attr) && count($is_table_attr) > 0) {
+                        if ($is_table_attr[0]) {
+                            if (is_subclass_of($class_name, BaseEntity::class)) {
+                                return true;
+                            } else {
+                                throw new EntityScannerException('The entity class should extends the BaseEntity class.');
+                            }
                         }
                     }
                 }

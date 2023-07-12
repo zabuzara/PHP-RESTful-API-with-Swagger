@@ -4,8 +4,7 @@
     "description": "A simple setup of Swagger UI with Webpack",
     "scripts": {
       "build": "webpack",
-      "start": "webpack-dev-server --open",
-      "swagger-config": "php swagger.config.php"
+      "start": "webpack-dev-server --open"
     },
     "author": "Shaun Luttin",
     "license": "Apache-2.0",
