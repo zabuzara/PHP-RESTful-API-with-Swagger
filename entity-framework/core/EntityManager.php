@@ -194,6 +194,7 @@ abstract class EntityManager {
             $tbname = $this->get_table_name($entity::class);
             $column_defs = $this->get_columns_def_from_attributes($entity::class);
 
+
             if (!$this->is_match_columns($tbname, $column_defs['type'])) {
                 $not_exists_columns_in_table = $this->get_not_existing_columns_in_table($entity::class);
                 $not_exists_columns_in_entity = $this->get_not_existing_columns_in_entity($entity::class);
@@ -469,12 +470,12 @@ abstract class EntityManager {
 
             $match_counter = 0;
             foreach($result as $row) {
-                $name = $row['Field'];
+                $name = str_contains($row['Field'], 'int') ? explode('(', $row['Field'])[0] : $row['Field'];
                 $type = $row['Type'];
              
                 if (in_array($name, $names)) {
-                    if ($this->is_match_type($type, $columns[$name]) && 
-                        $this->is_match_value($type, $columns[$name])) {        
+                    if (($name !== 'int' && $this->is_match_type($type, $columns[$name]) && 
+                        $this->is_match_value($type, $columns[$name])) || ($this->is_match_type($type, $columns[$name]))) {        
                         $match_counter++;
                     }       
                 } 
