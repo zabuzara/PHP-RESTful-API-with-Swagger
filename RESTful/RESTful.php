@@ -172,7 +172,7 @@ final class RESTful {
          
             $class = $this->controllers[$request_parts[0]]['class_name'];
             $method = $this->endpoint;
-            $post = json_decode(file_get_contents("php://input"), true);
+            $post = (object) json_decode(file_get_contents("php://input"), true);
             
             $class = new $class();
             if (!empty($this->parameters))

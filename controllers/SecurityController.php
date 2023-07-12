@@ -12,10 +12,10 @@ class SecurityController {
     }
 
     #[PostMapping('/authenticate')]
-    public function authenticate (array $object) {
-        RESTful::exists(params: $object, with: ['username', 'password']);
-        $username = $object['username'];
-        $password = $object['password'];
+    public function authenticate (object $object) {
+        RESTful::exists(params: get_object_vars($object), with: ['username', 'password']);
+        $username = $object->username;
+        $password = $object->password;
 
         $response = SQL::set_context(Context::auto_load())->exec('SELECT `nickname`, `password` FROM `user` WHERE `nickname` = ?', [$username]);
         if (!empty($response) && count($response) > 0 && array_key_exists('password', $response[0])) {
@@ -44,7 +44,11 @@ class SecurityController {
                     'token' => $session_token,
                     'expiration_time' => $session_time
                 ]);
+            } else {
+                RESTful::response('Invalid Credentials', 403);
             }
+        } else {
+            RESTful::response('User not found', 400);
         }
     }
 }

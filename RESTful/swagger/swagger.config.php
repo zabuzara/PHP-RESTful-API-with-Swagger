@@ -37,9 +37,9 @@ final class Swagger {
             array_push($this->content, '    '.strtolower($path['method']).':');
             // array_push($this->content, '      summary: "'.$path['params']['summary'].'"');
             array_push($this->content, '      tags:');
-            array_push($this->content, '        - '.$path['params']['tags']);
+            array_push($this->content, '        - '.$path['args']['tags']);
             array_push($this->content, '      responses:');
-            foreach($path['params']['responses'] as $response) {
+            foreach($path['args']['responses'] as $response) {
                 array_push($this->content, '        '.$response['code'].':');
                 array_push($this->content, '          description: "'.$response['description'].'"');
             }
@@ -156,8 +156,6 @@ if (!file_exists($yaml_path)) {
     $paths = [];
     $controllers = ControllerMapper::get_controllers();
 
-    print_r($controllers);
-
     if (!empty($controllers)) {
         foreach($controllers as $class_name => $controller) {
             foreach($controller['mapping'] as $method => $endpoint) {
@@ -166,22 +164,57 @@ if (!file_exists($yaml_path)) {
                     $path['name'] = '/'.$controller['request'].'/'.$endpoint_name;
                     $path['method'] = $method;
 
-                    $path['params'] = [
-                        'tags' => strtoupper($controller['request']),
+                    $path['args'] = [
+                        'tags' => ucfirst($controller['request']),
                         'responses' => [
                             ['code' => 401, 'description' => "Unauthorized"],
                             ['code' => 200, 'description' => "OK"]
                         ]
                     ];
 
-                    foreach($argument['parameters'] as $param) {
-        
-                        if ($param) {
-                            if ($param->getType()->getName() === 'array') {
-                                // $endpoint_name.$param->getName()
+                    // parameters:
+                    // - name: id
+                    //   in: path
+                    //   description: id of user to return
+                    //   required: true
+                    //   schema:
+                    //     type: integer
+                    //     format: int64
 
+                    $path['parameters'] = [];
+                    foreach($argument['parameters'] as $param) {
+                        $parameter = [];
+                        // [
+                        //     'name' => '',
+                        //     'in' => 'path',
+                        //     'description' => '',
+                        //     'required' => 'false',
+                        //     'schema' => [
+                        //         'type' => '',
+                        //         'format' => ''
+                        //     ]
+                        // ];
+                        if ($param) {
+                            $parameter['name'] = $param->getName();
+                            echo "\n\n";
+                            echo $param->getType()->getName();
+                            echo "\n\n";
+               
+                            if (!empty($param->getAttributes())) {
+                                foreach ($param->getAttributes() as $param_attr) {
+                                    
+                                    if ($param_attr->getName() === PathVariable::class) {
+                                        // echo "\n\n";
+                                        // print_r($param_attr->getName());
+                                        // echo "\n\n";
+                                        $parameter['in'] = 'path';
+        
+                                    }
+                                }
                             } else {
-                                // $param->getType()->getName()
+                                // echo "\n\n";
+                                // echo "nicht in"; 
+                                // echo "\n\n";
                             }
                         }
                     }
@@ -190,7 +223,6 @@ if (!file_exists($yaml_path)) {
                 }
             }
         }
-
 
         $swagger = new Swagger();
         $data = $swagger
@@ -218,14 +250,15 @@ if (!file_exists($yaml_path)) {
         $file = fopen($yaml_path,'a+');
         fclose($file);
 
-        foreach($data as $line) {
-            file_put_contents($yaml_path, $line."\n", FILE_APPEND);
+        if (file_exists($yaml_path)) {
+            foreach($data as $line) {
+                file_put_contents($yaml_path, $line."\n", FILE_APPEND);
+            }
+            
+            echo "\n\n\nYAML generated!!\n\n\n";
+            // exec('npm start --prefix ./local/swagger');
+            // exec('npm start');
         }
-
-        // exec('npm start --prefix ./local/swagger');
-        // exec('npm start');
     }
 }
-
-
 ?>

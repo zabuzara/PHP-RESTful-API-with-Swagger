@@ -139,7 +139,7 @@ info:
 servers:
   - url: "http://localhost/PHP-API-Template/"
     description: "RESTful API local"
-  - url: "https://api.toolchain.tech/api/chat/v1/"
+  - url: "https://api.toolchain.tech/php/test/v1/"
     description: "RESTful API remote"
 paths:
   /user/get_all:

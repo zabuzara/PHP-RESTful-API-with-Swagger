@@ -15,7 +15,7 @@ paths:
   /user/get_all:
     get:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -24,7 +24,7 @@ paths:
   /user/get_by_id:
     get:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -33,7 +33,7 @@ paths:
   /user/save_user:
     post:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -42,7 +42,7 @@ paths:
   /user/update_user:
     put:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -51,7 +51,7 @@ paths:
   /user/delete_user:
     delete:
       tags:
-        - USER
+        - User
       responses:
         401:
           description: "Unauthorized"
@@ -60,7 +60,7 @@ paths:
   /security/authenticate:
     post:
       tags:
-        - SECURITY
+        - Security
       responses:
         401:
           description: "Unauthorized"

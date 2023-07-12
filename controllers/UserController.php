@@ -22,12 +22,12 @@ class UserController {
     }
 
     #[PostMapping('/save_user')]
-    public function save_user(array $object) {
-        RESTful::exists(params: $object, with: ['nickname', 'password']);
+    public function save_user(object $object) {
+        RESTful::exists(params: get_object_vars($object), with: ['nickname', 'password']);
 
         $user = new UserEntity();
-        $user->nickname = $object['nickname'];
-        $user->password = Password::hash($object['password']);
+        $user->nickname = $object->nickname;
+        $user->password = Password::hash($object->password);
         $user->creation_time = Date('Y-m-d h:m:s', time());
         $user->expiration_time = Date('Y-m-d h:m:s', time() + 86400);
         $user->last_request_time = Date('Y-m-d h:m:s', time());
@@ -38,7 +38,7 @@ class UserController {
     }
 
     #[PutMapping('/update_user/{id}')]
-    public function update_user(#[PathVariable(name: 'id', require: true, validate: Validate::INT)] int $id, array $object) {
+    public function update_user(#[PathVariable(name: 'id', require: true, validate: Validate::INT)] int $id, object $object) {
         $to_update_user = $this->repository->find_by_id(UserEntity::class, $id);
         if (!is_null($to_update_user)) {
             foreach($object as $prop => $value) {
