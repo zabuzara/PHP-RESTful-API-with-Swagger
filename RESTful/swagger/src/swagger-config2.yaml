@@ -6,6 +6,22 @@ info:
   license:
     name: MIT
     url: https://opensource.org/license/mit/
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+    Security:
+      type: object
+      properties:
+        nickname:
+          type: string
+        password:
+          type: string
 servers:
   - url: "http://localhost/PHP-API-Template/"
     description: "Chat API local"
@@ -30,6 +46,12 @@ paths:
           description: "Unauthorized"
         200:
           description: "OK"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
   /user/save_user:
     post:
       tags:
@@ -39,6 +61,18 @@ paths:
           description: "Unauthorized"
         200:
           description: "OK"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
   /user/update_user:
     put:
       tags:
@@ -48,6 +82,24 @@ paths:
           description: "Unauthorized"
         200:
           description: "OK"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
   /user/delete_user:
     delete:
       tags:
@@ -57,6 +109,12 @@ paths:
           description: "Unauthorized"
         200:
           description: "OK"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
   /security/authenticate:
     post:
       tags:
@@ -66,3 +124,15 @@ paths:
           description: "Unauthorized"
         200:
           description: "OK"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Security'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Security'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Security'
+        required: true

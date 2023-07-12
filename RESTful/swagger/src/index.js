@@ -11,6 +11,5 @@ const ui = SwaggerUI({
 
 ui.initOAuth({
   appName: "Swagger UI Webpack Demo",
-  // See https://demo.identityserver.io/ for configuration details.
   clientId: 'implicit'
 });

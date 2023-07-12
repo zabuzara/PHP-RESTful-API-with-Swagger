@@ -1,5 +1,6 @@
 <?php
 include_once './../Scan.php';
+include_once './../Attributes.php';
 
 $yaml_path = './src/swagger-config2.yaml';
 
@@ -30,6 +31,22 @@ final class Swagger {
         return $this;
     }
 
+    public function components(array $components = [[]]) {
+        array_push($this->content, "components:");
+        array_push($this->content, "  schemas:");
+        foreach($components as $component) {
+            array_push($this->content, '    '.$component['name'].':');
+            array_push($this->content, '      type: object');
+            array_push($this->content, '      properties:');
+            
+            foreach($component['properties'] as $porperty) {
+                array_push($this->content, '        '.$porperty['name'].':');
+                array_push($this->content, '          type: '.$porperty['type']);
+            }
+        }
+        return $this;
+    }
+
     public function paths(array $paths = [[]]) {
         array_push($this->content, "paths:");
         foreach($paths as $path) {
@@ -42,6 +59,41 @@ final class Swagger {
             foreach($path['args']['responses'] as $response) {
                 array_push($this->content, '        '.$response['code'].':');
                 array_push($this->content, '          description: "'.$response['description'].'"');
+            }
+
+            if (array_key_exists('parameters', $path)) {
+                array_push($this->content, '      parameters:');
+                foreach($path['parameters'] as $parameter) {
+                    array_push($this->content, '        - name: '.$parameter['name']);
+                    if (array_key_exists('in', $parameter)) {
+                        array_push($this->content, '          in: path');
+                    }
+                    if (array_key_exists('required', $parameter)) {
+                        array_push($this->content, '          required: '.$parameter['required']);
+                    }
+                    if (array_key_exists('schema', $parameter)) {
+                        array_push($this->content, '          schema:');
+                        foreach($parameter['schema'] as $key => $param_schema_arg) {
+                            array_push($this->content, '            '.$key.': '.$param_schema_arg);
+                        }
+                    }
+                    // array_push($this->content, '          description: "'.$parameter['description'].'"');
+                }
+            }
+
+            if (array_key_exists('requestBody', $path)) {
+                array_push($this->content, '      requestBody:');
+                array_push($this->content, '        content:');
+                array_push($this->content, '          application/json:');
+                array_push($this->content, '            schema:');
+                array_push($this->content, '              $ref: '.$path['requestBody']['schema']);
+                array_push($this->content, '          application/xml:');
+                array_push($this->content, '            schema:');
+                array_push($this->content, '              $ref: '.$path['requestBody']['schema']);
+                array_push($this->content, '          application/x-www-form-urlencoded:');
+                array_push($this->content, '            schema:');
+                array_push($this->content, '              $ref: '.$path['requestBody']['schema']);
+                array_push($this->content, '        required: true');
             }
         }
         return $this;
@@ -181,40 +233,60 @@ if (!file_exists($yaml_path)) {
                     //     type: integer
                     //     format: int64
 
-                    $path['parameters'] = [];
-                    foreach($argument['parameters'] as $param) {
-                        $parameter = [];
-                        // [
-                        //     'name' => '',
-                        //     'in' => 'path',
-                        //     'description' => '',
-                        //     'required' => 'false',
-                        //     'schema' => [
-                        //         'type' => '',
-                        //         'format' => ''
-                        //     ]
-                        // ];
-                        if ($param) {
-                            $parameter['name'] = $param->getName();
-                            echo "\n\n";
-                            echo $param->getType()->getName();
-                            echo "\n\n";
-               
-                            if (!empty($param->getAttributes())) {
-                                foreach ($param->getAttributes() as $param_attr) {
+                    if (!empty($argument['parameters'])) {
+                        
+                        foreach($argument['parameters'] as $param) {
+                            $parameter = [];
+                         
+                        //  requestBody:
+                            // description: The Authentication
+                            // content:
+                            //   application/json:
+                            //     schema:
+                            //       $ref: '#/components/schemas/AuthenticateRequestBody'
+                            //   application/xml:
+                            //     schema:
+                            //       $ref: '#/components/schemas/AuthenticateRequestBody'
+                            //   application/x-www-form-urlencoded:
+                            //     schema:
+                            //       $ref: '#/components/schemas/AuthenticateRequestBody'
+                            // required: true
+
+                            if ($param) {
+                                $param_type = $param->getType()->getName();
+
+                                if ($param_type === 'object') {
+                                    if (!array_key_exists('requestBody', $path))
+                                        $path['requestBody'] = [
+                                            'schema' => '\'#/components/schemas/'. ucfirst($controller['request'].'\'')
+                                        ];
+                                } else {
+                                    if (!array_key_exists('parameters', $path))
+                                        $path['parameters'] = [];
+
+                                    $parameter['name'] = $param->getName();
+                                    $parameter['schema'] = [
+                                        'type' => $param_type === 'int' ? 'integer' : $param_type
+                                    ];
+                                    $parameter['required'] = false;
+                    
+                                    if (!empty($param->getAttributes())) {
+                                        foreach ($param->getAttributes() as $param_attr) {
                                     
-                                    if ($param_attr->getName() === PathVariable::class) {
-                                        // echo "\n\n";
-                                        // print_r($param_attr->getName());
-                                        // echo "\n\n";
-                                        $parameter['in'] = 'path';
-        
-                                    }
+                                            if ($param_attr->getName() === PathVariable::class) {
+                                                $parameter['in'] = 'path';
+
+                                                foreach($param_attr->getArguments() as $arg_name => $param_attr_arg) {
+                                                    if ($arg_name === 'require') {
+                                                        $parameter['required'] = $param_attr_arg ? 'true' : 'false';
+                                                    }
+                                                }
+                
+                                            }
+                                        }
+                                    } 
+                                    array_push($path['parameters'], $parameter);
                                 }
-                            } else {
-                                // echo "\n\n";
-                                // echo "nicht in"; 
-                                // echo "\n\n";
                             }
                         }
                     }
@@ -223,6 +295,10 @@ if (!file_exists($yaml_path)) {
                 }
             }
         }
+
+        // echo "\n\n";
+        // print_r($paths); 
+        // echo "\n\n";
 
         $swagger = new Swagger();
         $data = $swagger
@@ -233,6 +309,34 @@ if (!file_exists($yaml_path)) {
                     description: "PHP RESTful API with Swagger", 
                     license: ['name' => "MIT", 'url' => "https://opensource.org/license/mit/"]
                 )
+                ->components([
+                    [
+                        'name' => 'User',
+                        'properties' => [
+                            [
+                                'name' => 'id',
+                                'type' => 'integer'
+                            ],
+                            [
+                                'name' => 'nickname',
+                                'type' => 'string'
+                            ]
+                        ]
+                    ],
+                    [
+                        'name' => 'Security',
+                        'properties' => [
+                            [
+                                'name' => 'nickname',
+                                'type' => 'string',
+                            ],
+                            [
+                                'name' => 'password',
+                                'type' => 'string',
+                            ],
+                        ]
+                    ]
+                ])
                 ->servers([
                     [
                         'url' => "http://localhost/PHP-API-Template/",
