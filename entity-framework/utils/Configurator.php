@@ -67,59 +67,8 @@ class Configurator {
      * @return void
      */
     private function create_context_config_json_skeleton () {
-        $content = [
-            '{',
-            '    "context": [',
-            '        {',
-            '            "db_driver": "mysql",',
-            '            "db_name": "TEST_EM_V01",',
-            '            "db_user": "root",',
-            '            "db_pass": "root",',
-            '            "db_host": "127.0.0.1",',
-            '            "db_port": "3306"',
-            '        }',
-            '    ],',
-            '    "folder_structure": {',
-            '        "security": [',
-            '            "Hash"',
-            '        ],',
-            '        "types": [',
-            '            "Datetime",',
-            '            "Generic"',
-            '            "Numeric"',
-            '            "String"',
-            '        ],',
-            '        "utils": [',
-            '            "Configurator",',
-            '            "Validator"',
-            '        ],',
-            '        "database": [',
-            '            "Context",',
-            '            "SQL"',
-            '        ],',
-            '        "exceptions": [',
-            '            "SQLException",',
-            '            "EntityException",',
-            '            "EntityScannerException",',
-            '            "EntityManagerException"',
-            '        ],',
-            '        "core": [',
-            '            "BaseEntity",',
-            '            "IRepository",',
-            '            "EntityManager",',
-            '            "BaseRepository",',
-            '            "EntityScanner"',
-            '        ],',
-            '        "entities": [],',
-            '        "repositories": []',
-            '    }',
-            '}'
-        ];
-
-        ftruncate(fopen("framework.config.json", "r+"), 0);
-        foreach($content as $line) {
-            file_put_contents('framework.config.json', $line."\n", FILE_APPEND);
-        }
+        $content = '{ "context": [ { "db_driver": "mysql", "db_name": "TEST_EM_V01", "db_user": "root", "db_pass": "root", "db_host": "127.0.0.1", "db_port": "3306" } ], "folder_structure": { "security": [ "Hash" ], "types": [ "Datetime", "Generic", "Numeric", "String" ], "utils": [ "Configurator", "Validator" ], "database": [ "Context", "SQL" ], "exceptions": [ "SQLException", "EntityException", "EntityScannerException", "EntityManagerException" ], "core": [ "BaseEntity", "IRepository", "EntityManager", "BaseRepository", "EntityScanner" ], "entities": [], "repositories": [] } }';
+        file_put_contents('framework.config.json', $content);
     }
 
     /**

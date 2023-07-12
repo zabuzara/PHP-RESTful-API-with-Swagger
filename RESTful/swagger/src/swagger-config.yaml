@@ -122,6 +122,10 @@ components:
     BearerAuth: 
       type: http
       scheme: bearer
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: PHPSESSID
 openapi: "3.0.0"
 info:
   version: "1.0.0"
@@ -143,7 +147,8 @@ paths:
   /user/get_all:
     get:
       security:
-        - BearerAuth: [] 
+        - BearerAuth: []
+        - cookieAuth: []
       tags:
         - User
       summary: Finds all existing users from database
@@ -169,6 +174,11 @@ paths:
                   $ref: '#/components/schemas/Error'
         200:
           description: "OK"
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: PHPSESSID=e0na0csin6r2m1fstp9ttgkbnf; Path=/; HttpOnly
           content:
             application/json:
               schema:
@@ -183,7 +193,8 @@ paths:
   /user/get_by_id/{id}:
     get:
       security:
-        - BearerAuth: [] 
+        - BearerAuth: []
+        - cookieAuth: []
       tags:
         - User
       summary: Finds a user by given user id 
@@ -225,7 +236,8 @@ paths:
   /user/save_user:
     post:
       security:
-        - BearerAuth: [] 
+        - BearerAuth: []
+        - cookieAuth: []
       tags:
         - User
       summary: Stores a new user in database
@@ -263,6 +275,7 @@ paths:
     put:
       security:
         - BearerAuth: [] 
+        - cookieAuth: []
       tags:
         - User
       summary: Updates the user information
@@ -308,6 +321,7 @@ paths:
     delete:
       security:
         - BearerAuth: [] 
+        - cookieAuth: []
       tags:
         - User
       summary: Removes a user from database
@@ -338,6 +352,8 @@ paths:
           description: "OK"
   /security/authenticate:
     post:
+      security:
+        - cookieAuth: []
       tags:
         - Security
       summary: Authenticate user and returns token with expiration time

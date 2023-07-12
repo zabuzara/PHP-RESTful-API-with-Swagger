@@ -18,6 +18,6 @@ class ExampleEntity extends BaseEntity {
     #[Types\Datetime\T_TIMESTAMP]
     public string|null $example_datetime;
 
-    #[Types\Numeric\T_INT(11)]
+    #[Types\Numeric\T_INT]
     public int|null $example_archive_number;
 }

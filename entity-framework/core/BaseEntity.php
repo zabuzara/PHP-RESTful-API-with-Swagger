@@ -11,7 +11,7 @@ abstract class BaseEntity {
     #[NOT_NULL]
     #[PRIMARY_KEY]
     #[AUTO_INCREMENT]
-    #[Types\Numeric\T_INT(11)]
+    #[Types\Numeric\T_INT]
      public int $id;
 
     /**

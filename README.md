@@ -66,3 +66,14 @@ class UserController {
     }
 }
 ```
+
+```curl
+curl --cookie "PHPSESSID=e0na0csin6r2m1fstp9ttgkbnf" -X 'POST' \
+  'https://api.toolchain.tech/php/test/v1/security/authenticate' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "admin",
+  "password": "admin"
+}'
+```

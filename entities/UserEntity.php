@@ -25,7 +25,7 @@ class UserEntity extends BaseEntity {
     #[Types\Numeric\T_TINYINT(1)]
     public bool $is_baned = false;
 
-    #[Types\Numeric\T_INT(11)]
+    #[Types\Numeric\T_INT]
     public int $room_count = 0;
 
     #[Types\Datetime\T_TIMESTAMP]

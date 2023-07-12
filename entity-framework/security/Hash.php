@@ -20,20 +20,7 @@ abstract class Token {
     private function __construct() {}
 
     static public function generate_token () {
-        $secure = new \Random\Engine\Secure();
-        $time = time();
-        $token = (base64_encode(bin2hex(
-            $secure->generate() . 
-            substr($time, strlen($time) - 1) .
-            openssl_random_pseudo_bytes(12) .
-            substr($time, strlen($time) - 1) .
-            openssl_random_pseudo_bytes(2) .
-            $secure->generate() . 
-            substr($time, strlen($time) - 1) . 
-            openssl_random_pseudo_bytes(12) .
-            substr($time, strlen($time) - 1) . 
-            openssl_random_pseudo_bytes(2)
-        )));
+        $token = bin2hex(openssl_random_pseudo_bytes(64));
         return $token;
     }
 }
