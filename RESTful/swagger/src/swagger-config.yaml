@@ -122,8 +122,6 @@ components:
     BearerAuth: 
       type: http
       scheme: bearer
-security:
-  - BearerAuth: [] 
 openapi: "3.0.0"
 info:
   version: "1.0.0"
@@ -144,6 +142,8 @@ servers:
 paths:
   /user/get_all:
     get:
+      security:
+        - BearerAuth: [] 
       tags:
         - User
       summary: Finds all existing users from database
@@ -182,6 +182,8 @@ paths:
                   $ref: '#/components/schemas/User'
   /user/get_by_id/{id}:
     get:
+      security:
+        - BearerAuth: [] 
       tags:
         - User
       summary: Finds a user by given user id 
@@ -222,6 +224,8 @@ paths:
                 type: string
   /user/save_user:
     post:
+      security:
+        - BearerAuth: [] 
       tags:
         - User
       summary: Stores a new user in database
@@ -257,6 +261,8 @@ paths:
           description: "OK"
   /user/update_user/{id}:
     put:
+      security:
+        - BearerAuth: [] 
       tags:
         - User
       summary: Updates the user information
@@ -300,6 +306,8 @@ paths:
           description: "OK"
   /user/delete_user/{id}:
     delete:
+      security:
+        - BearerAuth: [] 
       tags:
         - User
       summary: Removes a user from database
