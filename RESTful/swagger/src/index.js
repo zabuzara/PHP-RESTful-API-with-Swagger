@@ -6,6 +6,7 @@ const spec = require('./swagger-config.yaml');
 const ui = SwaggerUI({
   spec,
   dom_id: '#swagger',
+  defaultModelsExpandDepth: -1,
 });
 
 ui.initOAuth({

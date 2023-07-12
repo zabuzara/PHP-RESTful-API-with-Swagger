@@ -127,8 +127,12 @@ security:
 openapi: "3.0.0"
 info:
   version: "1.0.0"
-  title: "Swagger RESTful PHP API"
-  description: "PHP RESTful API with Swagger"
+  title: "Swagger RESTful API on PHP"
+  description: "PHP RESTful API with Swagger and bearer token authentication."
+  contact:
+    name: "OME"
+    description: "Github"
+    url: "https://github.com/zabuzara"
   license:
     name: MIT
     url: https://opensource.org/license/mit/
@@ -142,9 +146,27 @@ paths:
     get:
       tags:
         - User
+      summary: Finds all existing users from database
       responses:
         401:
           description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+                example: {
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized"
+                  }
+                }
+            application/xml:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
         200:
           description: "OK"
           content:
@@ -162,6 +184,7 @@ paths:
     get:
       tags:
         - User
+      summary: Finds a user by given user id 
       parameters:
         - name: id
           in: path
@@ -173,6 +196,18 @@ paths:
       responses:
         401:
           description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+                example: {
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized"
+                  }
+                }
         200:
           description: "OK"
           content:
@@ -189,6 +224,7 @@ paths:
     post:
       tags:
         - User
+      summary: Stores a new user in database
       requestBody:
         description: Create a new user in the database
         content:
@@ -205,12 +241,25 @@ paths:
       responses:
         401:
           description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+                example: {
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized"
+                  }
+                }
         200:
           description: "OK"
   /user/update_user/{id}:
     put:
       tags:
         - User
+      summary: Updates the user information
       parameters:
         - name: id
           in: path
@@ -235,12 +284,25 @@ paths:
       responses:
         401:
           description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+                example: {
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized"
+                  }
+                }
         200:
           description: "OK"
   /user/delete_user/{id}:
     delete:
       tags:
         - User
+      summary: Removes a user from database
       parameters:
         - name: id
           in: path
@@ -252,12 +314,25 @@ paths:
       responses:
         401:
           description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+                example: {
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized"
+                  }
+                }
         200:
           description: "OK"
   /security/authenticate:
     post:
       tags:
         - Security
+      summary: Authenticate user and returns token with expiration time
       requestBody:
         description: The Authentication
         content:
@@ -274,6 +349,18 @@ paths:
       responses:
         401:
           description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Error'
+                example: {
+                  "error": {
+                    "code": 401,
+                    "message": "Unauthorized"
+                  }
+                }
         200:
           description: "OK"
           content:
