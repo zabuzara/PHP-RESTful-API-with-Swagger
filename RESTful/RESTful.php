@@ -23,10 +23,15 @@ final class RESTful {
             $htaccess_file = $search_result[0];
             $rules = [
                 'RewriteEngine On',
+                'SetEnvIf HOST "^localhost" local_url',
+                'Order Deny,Allow',
                 'RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)',
                 'RewriteRule .* index.php',
                 'RewriteCond %{HTTP:Authorization} .',
-                'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]'
+                'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
+                'Deny from all',
+                'Allow from env=local_url',
+                'Satisfy any'
             ];
 
             if (!empty(file_get_contents($htaccess_file['path']))) {
