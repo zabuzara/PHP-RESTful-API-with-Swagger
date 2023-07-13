@@ -15,6 +15,6 @@ if (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] === $domain_name) 
     if (count($document_root) > 0)
         $document_root = $document_root[1].'/';
 }
-echo "Test Cronjob Already ok updated!<br><br><br>";
+echo "<h1>OK</h1>!<br><br><br>";
 new RESTful(document_root: $document_root , ignore_routes: ['security']);
 ?>
