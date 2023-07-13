@@ -58,6 +58,7 @@ final class RESTful {
                 }
             }
         }
+        // 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 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    PHP-RESTful-API-with-Swagger.git
         if (!file_exists(".htaccess"))
             if (fopen(".htaccess", "w")) {
                 foreach(self::HTACCESS_RULES as $rule) {
