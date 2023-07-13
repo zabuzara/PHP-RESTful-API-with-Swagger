@@ -15,6 +15,6 @@ if (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] === $domain_name) 
     if (count($document_root) > 0)
         $document_root = $document_root[1].'/';
 }
-echo 'CRONJOB www-data again  test  ';
+echo 'Last Test ';
 new RESTful(document_root: $document_root , ignore_routes: ['security']);
 ?>
