@@ -10,7 +10,7 @@ RESTful::with_authorization(
 $document_root = '/PHP-API-Template/';
 $domain_name = 'api.toolchain.tech';
 
-if ($_SERVER['SERVER_NAME'] === $domain_name) {
+if (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] === $domain_name) {
     $document_root = explode('/var/www/html/api', __DIR__);
     if (count($document_root) > 0)
         $document_root = $document_root[1].'/';
