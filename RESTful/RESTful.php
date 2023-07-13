@@ -32,7 +32,14 @@ final class RESTful {
                 'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
                 'Deny from all',
                 'Allow from env=local_url',
-                'Satisfy any'
+                'Satisfy any',
+                'Options All -Indexes',
+                'IndexIgnore *',
+                'IndexIgnore *.png *.zip *.jpg *.gif *.doc *.xml *.json *.md *.txt *.ttf *.php *.ico *js *.scss',
+                '<FilesMatch "\.(ini|psd|log|sh|xml|txt|md)$">',
+                '    Order allow,deny',
+                '    Deny from all',
+                '</FilesMatch>'
             ];
 
             if (!empty(file_get_contents($htaccess_file['path']))) {

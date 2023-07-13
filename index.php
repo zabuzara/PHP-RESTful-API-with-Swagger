@@ -6,5 +6,15 @@ RESTful::with_authorization(
     session_key_for_token: 'token', 
     session_key_for_expiration: 'expiration_time'
 );
-new RESTful(document_root: '/PHP-API-Template/', ignore_routes: ['security']);
+
+$document_root = '/PHP-API-Template/';
+$domain_name = 'api.toolchain.tech';
+
+if ($_SERVER['SERVER_NAME'] === $domain_name) {
+    $document_root = explode('/var/www/html/api', __DIR__);
+    if (count($document_root) > 0)
+        $document_root = $document_root[1].'/';
+}
+
+new RESTful(document_root: $document_root , ignore_routes: ['security']);
 ?>
