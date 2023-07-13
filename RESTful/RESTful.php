@@ -18,40 +18,57 @@ final class RESTful {
     private mixed $parameters = [];
     static private array $includes = [];
 
+    const HTACCESS_RULES = [
+        'RewriteEngine On',
+        'SetEnvIf HOST "^localhost" local_url',
+        'Order Deny,Allow',
+        'RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)',
+        'RewriteRule .* index.php',
+        'RewriteCond %{HTTP:Authorization} .',
+        'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
+        'Deny from all',
+        'Allow from env=local_url',
+        'Satisfy any',
+        'Options All -Indexes',
+        'IndexIgnore *',
+        'IndexIgnore *.png *.zip *.jpg *.gif *.doc *.xml *.json *.md *.txt *.ttf *.php *.ico *js *.scss',
+        '<FilesMatch "\.(ini|psd|log|sh|xml|txt|md)$">',
+        '    Order allow,deny',
+        '    Deny from all',
+        '</FilesMatch>'
+    ];
+
     public function __construct(string $document_root, array $ignore_routes = []) {
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
             $htaccess_file = $search_result[0];
-            $rules = [
-                'RewriteEngine On',
-                'SetEnvIf HOST "^localhost" local_url',
-                'Order Deny,Allow',
-                'RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)',
-                'RewriteRule .* index.php',
-                'RewriteCond %{HTTP:Authorization} .',
-                'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
-                'Deny from all',
-                'Allow from env=local_url',
-                'Satisfy any',
-                'Options All -Indexes',
-                'IndexIgnore *',
-                'IndexIgnore *.png *.zip *.jpg *.gif *.doc *.xml *.json *.md *.txt *.ttf *.php *.ico *js *.scss',
-                '<FilesMatch "\.(ini|psd|log|sh|xml|txt|md)$">',
-                '    Order allow,deny',
-                '    Deny from all',
-                '</FilesMatch>'
-            ];
-
             if (!empty(file_get_contents($htaccess_file['path']))) {
                 $lines = explode("\n", file_get_contents($htaccess_file['path']));
             
-                foreach($rules as $rule) {
+                foreach(self::HTACCESS_RULES as $rule) {
                     if (!in_array($rule, $lines)) {
-                        die('the .htaccess file must include followed rules: <br><br>'.join("<br>", $rules));                    
+                        die('the .htaccess file must include followed rules: <br><br>'.join("<br>", self::HTACCESS_RULES));                    
                     }
+                }
+            } else {
+                foreach(self::HTACCESS_RULES as $rule) {
+                    $file = fopen('.htaccess', 'a+');
+                    fclose($file);
+                    file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
                 }
             }
         }
+        if (!file_exists(".htaccess"))
+            if (fopen(".htaccess", "w")) {
+                foreach(self::HTACCESS_RULES as $rule) {
+                    file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
+                }
+            } else {
+                echo('Permission denied (.htaccess creation failed!)');
+            }
+        if (file_exists(".htaccess"))
+            chown('.htaccess', 'root');
+       
         $request_parts =  explode('/', explode($document_root, $_SERVER['REQUEST_URI'])[1]);
 
         header("Access-Control-Allow-Origin: http://localhost:8080");
