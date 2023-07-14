@@ -1,6 +1,7 @@
 <?php
 include_once 'Scan.php';
 include_once 'Attributes.php';
+include_once 'classes/MIME.php';
 
 /**
  * @author Omid Malekzadeh Eshtajarani <zabuzara@yahoo.com>
@@ -194,22 +195,23 @@ final class RESTful {
             if (empty($controller_endpoints[$this->endpoint]))
             $this->forbidden(__LINE__);
          
-            $class = $this->controllers[$request_parts[0]]['class_name'];
+            $class_name = $this->controllers[$request_parts[0]]['class_name'];
             $method = $this->endpoint;
 
             $post = null;
-            if (isset($_SERVER['CONTENT_TYPE'])) {
+            if (isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] !== MIME::APPLICATION_JSON[0]) {
                 $post = (file_get_contents("php://input"));
             } else {
                 $post = json_decode(file_get_contents("php://input"));
             }
           
             if ($post !== null) {
-                $class = new $class();
-                if (!empty($this->parameters))
-                    $class->{$method}($this->parameters, $post);
-                else
-                    $class->{$method}($post);
+                $class_instance = new $class_name();
+                if (!empty($this->parameters)) {
+                    $class_instance->{$method}($this->parameters, $post);
+                } else {
+                    $class_instance->{$method}($post);
+                }
             }
         } else {
             RESTful::response('Unauthorized', 401);
