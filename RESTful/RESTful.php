@@ -310,6 +310,7 @@ final class RESTful {
         switch($access) {
             case ACCESS::LOCAL: return self::LOCAL_HTACCESS_RULES;
             case ACCESS::PUBLIC: return self::PUBLIC_HTACCESS_RULES;
+            default: return [];
         }
     }
 
