@@ -205,13 +205,15 @@ final class RESTful {
                 $post = json_decode(file_get_contents("php://input"));
             }
           
+            $class_instance = new $class_name();
             if ($post !== null) {
-                $class_instance = new $class_name();
                 if (!empty($this->parameters)) {
                     $class_instance->{$method}($this->parameters, $post);
                 } else {
                     $class_instance->{$method}($post);
                 }
+            } else {
+                $class_instance->{$method}();
             }
         } else {
             RESTful::response('Unauthorized', 401);
