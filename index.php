@@ -1,5 +1,4 @@
 <?php
-echo "ok";
 include_once './RESTful/classes/ACCESS.php';
 include_once './entity-framework/index.php';
 include_once './RESTful/RESTful.php';
