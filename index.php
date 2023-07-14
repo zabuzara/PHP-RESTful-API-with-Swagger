@@ -15,5 +15,5 @@ if (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] === $domain_name) 
     if (count($document_root) > 0)
         $document_root = $document_root[1].'/';
 }
-new RESTful(document_root: $document_root , ignore_routes: ['security']);
+new RESTful(access: ACCESS::LOCAL, document_root: $document_root , ignore_routes: ['security']);
 ?>

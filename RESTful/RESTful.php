@@ -3,6 +3,11 @@ include_once 'Scan.php';
 include_once 'Attributes.php';
 include_once 'classes/MIME.php';
 
+enum ACCESS {
+    case PUBLIC;
+    case LOCAL;
+}
+
 /**
  * @author Omid Malekzadeh Eshtajarani <zabuzara@yahoo.com>
  * Simple RESTful class for control the 
@@ -19,8 +24,9 @@ final class RESTful {
     private mixed $parameters = [];
     static private array $includes = [];
 
-    const HTACCESS_RULES = [
+    private const PUBLIC_HTACCESS_RULES = [
         'RewriteEngine On',
+        'ErrorDocument 403 "Access Denied"',
         'SetEnvIf HOST "^localhost" local_url',
         'Order Deny,Allow',
         'RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)',
@@ -39,36 +45,59 @@ final class RESTful {
         '</FilesMatch>'
     ];
 
-    public function __construct(string $document_root, array $ignore_routes = []) {
+    private const LOCAL_HTACCESS_RULES = [
+        'RewriteEngine On',
+        'Require ip 127.0.0.1',
+        'Require all denied',
+        'ErrorDocument 403 "Access Denied"',
+        'SetEnvIf HOST "^localhost" local_url',
+        'Order Deny,Allow',
+        'RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)',
+        'RewriteRule .* index.php',
+        'RewriteCond %{HTTP:Authorization} .',
+        'RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]',
+        'Deny from all',
+        'Allow from env=local_url',
+        'Satisfy any',
+        'Options All -Indexes',
+        'IndexIgnore *',
+        'IndexIgnore *.png *.zip *.jpg *.gif *.doc *.xml *.json *.md *.txt *.ttf *.php *.ico *js *.scss',
+        '<FilesMatch "\.(ini|psd|log|sh|xml|txt|md)$">',
+        '    Order allow,deny',
+        '    Deny from all',
+        '</FilesMatch>'
+    ];
+
+
+    public function __construct(ACCESS $access, string $document_root, array $ignore_routes = []) {
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
             $htaccess_file = $search_result[0];
-            if (!empty(file_get_contents($htaccess_file['path']))) {
-                $lines = explode("\n", file_get_contents($htaccess_file['path']));
-            
-                foreach(self::HTACCESS_RULES as $rule) {
-                    if (!in_array($rule, $lines)) {
-                        die('the .htaccess file must include followed rules: <br><br>'.join("<br>", self::HTACCESS_RULES));                    
+            if (!file_exists(".htaccess")) {
+                if (fopen(".htaccess", "w")) {
+                    foreach($this->get_rules($access) as $rule) {
+                        file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
                     }
+                } else {
+                    echo('Permission denied (.htaccess creation failed!)');
                 }
             } else {
-                foreach(self::HTACCESS_RULES as $rule) {
-                    $file = fopen('.htaccess', 'a+');
-                    fclose($file);
-                    file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
+                $existing_htaccess_file_content = file_get_contents('.htaccess');
+                $content_length = trim(strlen($existing_htaccess_file_content));
+                $rules_length = trim(strlen(join("\n", $this->get_rules($access))."\n"));
+
+                if ($content_length !== $rules_length) {
+                    file_put_contents('.htaccess', '');
+                    foreach($this->get_rules($access) as $rule) {
+                        file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
+                    }
                 }
             }
         }
-        if (!file_exists(".htaccess"))
-            if (fopen(".htaccess", "w")) {
-                foreach(self::HTACCESS_RULES as $rule) {
-                    file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
-                }
-            } else {
-                echo('Permission denied (.htaccess creation failed!)');
-            }
-        if (file_exists(".htaccess"))
-            chown('.htaccess', 'root');
+       
+       
+        // if (file_exists(".htaccess"))
+        //     chown('.htaccess', 'root');
        
         $request_parts =  explode('/', explode($document_root, $_SERVER['REQUEST_URI'])[1]);
 
@@ -267,6 +296,19 @@ final class RESTful {
 
             if (empty($param_value))
                 RESTful::response('invalid given value');
+        }
+    }
+
+    /**
+     * Returns rules depend on access
+     *
+     * @param ACCESS $access
+     * @return array
+     */
+    private function get_rules(ACCESS $access) : array {
+        switch($access) {
+            case ACCESS::LOCAL: return self::LOCAL_HTACCESS_RULES;
+            case ACCESS::PUBLIC: return self::PUBLIC_HTACCESS_RULES;
         }
     }
 
