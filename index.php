@@ -1,5 +1,6 @@
 <?php
 include_once './entity-framework/index.php';
+include_once './RESTful/classes/ACCESS.php';
 include_once './RESTful/RESTful.php';
 
 RESTful::with_authorization(

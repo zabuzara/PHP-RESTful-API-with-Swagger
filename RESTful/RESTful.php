@@ -2,11 +2,7 @@
 include_once 'Scan.php';
 include_once 'Attributes.php';
 include_once 'classes/MIME.php';
-
-enum ACCESS {
-    case PUBLIC;
-    case LOCAL;
-}
+include_once 'classes/ACCESS.php';
 
 /**
  * @author Omid Malekzadeh Eshtajarani <zabuzara@yahoo.com>
