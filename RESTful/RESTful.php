@@ -196,13 +196,21 @@ final class RESTful {
          
             $class = $this->controllers[$request_parts[0]]['class_name'];
             $method = $this->endpoint;
-            $post = json_decode(file_get_contents("php://input"));
-            
-            $class = new $class();
-            if (!empty($this->parameters))
-                $class->{$method}($this->parameters, $post);
-            else
-                $class->{$method}($post);
+
+            $post = null;
+            if (isset($_SERVER['CONTENT_TYPE'])) {
+                $post = (file_get_contents("php://input"));
+            } else {
+                $post = json_decode(file_get_contents("php://input"));
+            }
+          
+            if ($post !== null) {
+                $class = new $class();
+                if (!empty($this->parameters))
+                    $class->{$method}($this->parameters, $post);
+                else
+                    $class->{$method}($post);
+            }
         } else {
             RESTful::response('Unauthorized', 401);
         }

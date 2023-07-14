@@ -68,22 +68,16 @@ class UserController {
     }
 
 
-    #[PostMapping('/take_data')]
-    public function take_data(object $object) {
-        echo json_encode($object);
-        /* PUT data comes in on the stdin stream */
-        // $putdata = fopen("php://input", "r");
+    //#[PostMapping('/post_data')]
+    public function post_data(mixed $content) {
+        include_once './RESTful/classes/ENCType.php';
+        include_once './RESTful/classes/Size.php';
+        include_once './RESTful/classes/MIME.php';
 
-        // /* Open a file for writing */
-        // $fp = fopen("myputfile.ext", "w");
+        $file_extension = MIME::get_extension($_SERVER['CONTENT_TYPE']);
+        $file_name = "post_file".$file_extension;
 
-        // /* Read the data 1 KB at a time
-        // and write to the file */
-        // while ($data = fread($putdata, 1024))
-        // fwrite($fp, $data);
-
-        // /* Close the streams */
-        // fclose($fp);
-        // fclose($putdata);
+        fopen($file_name, "w");
+        file_put_contents($file_name, $content);
     }
 }
