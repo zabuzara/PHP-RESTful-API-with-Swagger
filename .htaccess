@@ -1,21 +1,19 @@
 RewriteEngine On
-
+Require ip 127.0.0.1
+Require all denied
+ErrorDocument 403 "Access Denied"
 SetEnvIf HOST "^localhost" local_url
 Order Deny,Allow
-
 RewriteCond %{REQUEST_METHOD} (POST|GET|OPTIONS|PUT|DELETE)
 RewriteRule .* index.php
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
 Deny from all
 Allow from env=local_url
 Satisfy any
-
 Options All -Indexes
 IndexIgnore *
 IndexIgnore *.png *.zip *.jpg *.gif *.doc *.xml *.json *.md *.txt *.ttf *.php *.ico *js *.scss
-
 <FilesMatch "\.(ini|psd|log|sh|xml|txt|md)$">
     Order allow,deny
     Deny from all
