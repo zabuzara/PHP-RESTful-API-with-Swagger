@@ -70,6 +70,12 @@ final class RESTful {
 
 
     public function __construct(ACCESS $access, string $document_root, array $ignore_routes = []) {
+        if ($access === ACCESS::LOCAL) {
+            if ($_SERVER['SERVER_ADDR'] != $_SERVER['REMOTE_ADDR']) {
+                header($_SERVER['SERVER_PROTOCOL'] . ' 403 Access denied');
+                echo "Access Denied";
+            }
+        } 
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
             $htaccess_file = $search_result[0];
