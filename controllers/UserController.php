@@ -56,4 +56,28 @@ class UserController {
     public function delete_user(#[PathVariable(name: 'id', require: true, validate: Validate::INT)] int $id) {
         $this->repository->remove(UserEntity::class, $id);
     }
+
+    #[GetMapping('/get_data')]
+    public function get_data() {
+        $request_url = './RESTful/swagger/favicon.ico';
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary"); 
+        header("Content-disposition: attachment; filename=\"" . basename($request_url) . ".ico\""); 
+        readfile($request_url);
+        exit();
+    }
+
+
+    //#[PostMapping('/post_data')]
+    public function post_data(mixed $content) {
+        include_once './RESTful/classes/ENCType.php';
+        include_once './RESTful/classes/Size.php';
+        include_once './RESTful/classes/MIME.php';
+
+        $file_extension = MIME::get_extension($_SERVER['CONTENT_TYPE']);
+        $file_name = "post_file".$file_extension;
+
+        fopen($file_name, "w");
+        file_put_contents($file_name, $content);
+    }
 }
