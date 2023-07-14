@@ -75,28 +75,27 @@ final class RESTful {
         $search_result = Scan::directory('.')->for('.htaccess', true, true, true);
         if (count($search_result) > 0) {
             $htaccess_file = $search_result[0];
-            if (!file_exists(".htaccess")) {
-                if (fopen(".htaccess", "w")) {
+            if (!file_exists($htaccess_file['path'])) {
+                if (fopen($htaccess_file['path'], "w")) {
                     foreach($this->get_rules($access) as $rule) {
-                        file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
+                        file_put_contents($htaccess_file['path'], $rule."\n", FILE_APPEND);
                     }
                 } else {
                     echo('Permission denied (.htaccess creation failed!)');
                 }
             } else {
-                $existing_htaccess_file_content = file_get_contents('.htaccess');
+                $existing_htaccess_file_content = file_get_contents($htaccess_file['path']);
                 $content_length = trim(strlen($existing_htaccess_file_content));
                 $rules_length = trim(strlen(join("\n", $this->get_rules($access))."\n"));
 
                 if ($content_length !== $rules_length) {
-                    file_put_contents('.htaccess', '');
+                    file_put_contents($htaccess_file['path'], '');
                     foreach($this->get_rules($access) as $rule) {
-                        file_put_contents('.htaccess', $rule."\n", FILE_APPEND);
+                        file_put_contents($htaccess_file['path'], $rule."\n", FILE_APPEND);
                     }
                 }
             }
         }
-       
        
         // if (file_exists(".htaccess"))
         //     chown('.htaccess', 'root');

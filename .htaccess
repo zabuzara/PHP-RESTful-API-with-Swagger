@@ -1,6 +1,4 @@
 RewriteEngine On
-Require ip 127.0.0.1
-Require all denied
 ErrorDocument 403 "Access Denied"
 SetEnvIf HOST "^localhost" local_url
 Order Deny,Allow
